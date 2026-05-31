@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>selfmend fixture — ambiguous (baseline)</title>
+  </head>
+  <body>
+    <main>
+      <h1>selfmend fixture app — ambiguous duplicates</h1>
+
+      <!--
+        TWO near-identical "Delete" buttons in a list. Both share the SAME
+        strong identity signals: data-testid="delete-item", visible text
+        "Delete", ARIA role button, tag button. They differ only in weak,
+        positional signals (which row / which sibling).
+
+        The FIRST row's delete button additionally carries a volatile class
+        (.btn-delete-primary) that the spec resolves + fingerprints against on
+        this baseline page. Because BOTH buttons share data-testid="delete-item",
+        the test-id selector is NOT unique, so at heal time the candidate-finder
+        falls back to structural selectors and BOTH buttons become scoreable
+        candidates carrying the same identity — the look-alike / ambiguous case.
+      -->
+      <ul id="item-list">
+        <li id="row-a">
+          <span>Item A</span>
+          <button
+            type="button"
+            data-testid="delete-item"
+            class="btn btn-delete-primary"
+            role="button"
+            aria-label="Delete"
+          >
+            Delete
+          </button>
+        </li>
+        <li id="row-b">
+          <span>Item B</span>
+          <button
+            type="button"
+            data-testid="delete-item"
+            class="btn btn-delete-secondary"
+            role="button"
+            aria-label="Delete"
+          >
+            Delete
+          </button>
+        </li>
+      </ul>
+
+      <p id="status" data-testid="status">idle</p>
+    </main>
+  </body>
+</html>

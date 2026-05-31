@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>selfmend fixture — ambiguous (selector-mutated)</title>
+  </head>
+  <body>
+    <main>
+      <h1>selfmend fixture app — ambiguous duplicates</h1>
+
+      <!--
+        SAME list as ambiguous.html, except the FIRST row's volatile class is
+        mutated (.btn-delete-primary -> .btn-delete-cta), so a locator pinned to
+        ".btn-delete-primary" no longer resolves (the "selector churn" break).
+
+        Crucially, BOTH delete buttons survive intact with the SAME identity
+        signals (data-testid="delete-item", text "Delete", role button). At heal
+        time the candidate-finder cannot pick a unique winner: both score
+        near-identically high (well above the 0.9 floor) but within the 0.05
+        margin of each other -> decide() returns reason "ambiguous" and the
+        action must FAIL normally (no false green, D-06 / MATCH-04).
+      -->
+      <ul id="item-list">
+        <li id="row-a">
+          <span>Item A</span>
+          <button
+            type="button"
+            data-testid="delete-item"
+            class="btn btn-delete-cta"
+            role="button"
+            aria-label="Delete"
+          >
+            Delete
+          </button>
+        </li>
+        <li id="row-b">
+          <span>Item B</span>
+          <button
+            type="button"
+            data-testid="delete-item"
+            class="btn btn-delete-secondary"
+            role="button"
+            aria-label="Delete"
+          >
+            Delete
+          </button>
+        </li>
+      </ul>
+
+      <p id="status" data-testid="status">idle</p>
+    </main>
+  </body>
+</html>
