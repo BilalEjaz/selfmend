@@ -284,7 +284,7 @@ export function describeArgs(
       // per-content occurrence index under a fixed pseudo-content key so two
       // distinct non-serializable args within a test get distinct tokens (LO-02)
       // without colliding with real selector content keys.
-      return `<${typeof a}#${nextOccurrence(" describeArgs:" + typeof a)}>`;
+      return `<${typeof a}#${nextOccurrence("\u0000describeArgs:" + typeof a)}>`;
     })
     .join(",");
 }
