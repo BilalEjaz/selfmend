@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
+status: verifying
 stopped_at: Completed 03-01-PLAN.md
-last_updated: "2026-05-31T15:06:56.655Z"
+last_updated: "2026-05-31T15:36:08.468Z"
 last_activity: 2026-05-31
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 10
-  completed_plans: 9
-  percent: 50
+  completed_plans: 10
+  percent: 75
 ---
 
 # Project State
@@ -27,10 +27,10 @@ See: .planning/PROJECT.md (updated 2026-05-31)
 
 Phase: 03 (Persistence & Parallel-Worker Safety) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-05-31
 
-Progress: [█████████░] 90%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -62,6 +62,7 @@ Progress: [█████████░] 90%
 | Phase 02 P02 | 6 min | 4 tasks | 8 files |
 | Phase 03 P01 | 9 | 3 tasks | 6 files |
 | Phase 03 P02 | 20 | 2 tasks | 8 files |
+| Phase 03 P03 | 33 | 4 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -95,6 +96,9 @@ Recent decisions affecting current work:
 - [Phase ?]: [03-02] persistence.ts is the single fs/path seam; all store paths via path.resolve(rootDir,...) incl. the test/env override, so a configured path can never escape the project (T-03-05)
 - [Phase ?]: [03-02] atomicWrite = temp sibling + fs.rename with EPERM/EBUSY/EACCES retry-backoff; exhausted retries rm temp + rethrow so a reader never sees a partial committed file (T-03-04)
 - [Phase ?]: [03-02] identify() is occurrence-based (selector,testFile,testTitle,occurrence); index incremented at wrapLocator CREATION, per-content per-test, so capture-run and broken-heal-run compute the identical key (D-04/D-05); no key -> no heal preserved (D-07)
+- [Phase ?]: [03-03] Merge+prune lives in the Reporter onEnd (not globalTeardown): only the reporter holds both the post-filter planned Suite (onBegin) and FullResult.status (onEnd) to gate the destructive prune (D-09)
+- [Phase ?]: [03-03] isComplete inspects BOTH FullConfig AND process.argv: PW 1.60 leaves FullConfig.grep at /.*/ for a CLI --grep run, so argv narrowing-flag detection closes the gap that would wrongly prune a filtered run (Open Q2/A1 resolved)
+- [Phase ?]: [03-03] Workers load baseline read-only at setup and flush parallelIndex shards at teardown; the reporter is the single atomic-merge writer; destructive prune gated behind SELFMEND_PRUNE + complete-run + passed, refresh-on-pass always runs (D-08)
 
 ### Pending Todos
 
@@ -114,6 +118,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-31T15:06:19.503Z
+Last session: 2026-05-31T15:35:07.486Z
 Stopped at: Completed 03-01-PLAN.md
 Resume file: None

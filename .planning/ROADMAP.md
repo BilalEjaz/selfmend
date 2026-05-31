@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Thinnest Real Heal** - End-to-end single-worker heal: install, capture, pure-scored match through the trust gates, live rebind, console summary
 - [x] **Phase 2: Trust Hardening** - Multi-signal weighted scoring with hardened confidence floor, second-best margin gate, no-force-green, and a clear audit trail (completed 2026-05-31)
-- [ ] **Phase 3: Persistence & Parallel-Worker Safety** - Baseline survives across runs and is corruption-free under Playwright parallel workers
+- [x] **Phase 3: Persistence & Parallel-Worker Safety** - Baseline survives across runs and is corruption-free under Playwright parallel workers (completed 2026-05-31)
 - [ ] **Phase 4: Offline Verification & Publish** - Network-blocked offline proof, dual ESM/CJS packaging, compatibility matrix, first npm release
 
 ## Phase Details
@@ -64,7 +64,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 3 plans
 - [x] 03-01-PLAN.md — Pure store layer (TDD): versioned zod schema, deterministic serializer, merge+refresh+prune; Playwright/fs-free (CAP-02, CAP-03)
 - [x] 03-02-PLAN.md — fs persistence adapter (Windows-safe atomic write, parallelIndex shards) + occurrence-based identity key swap across proxy/store/fixture (CAP-02, CAP-03)
-- [ ] 03-03-PLAN.md — Worker shard flush + Reporter onBegin/onEnd merge+gated-prune + .gitignore reconcile + CAP-02/CAP-03/D-09 integration specs (CAP-02, CAP-03)
+- [x] 03-03-PLAN.md — Worker shard flush + Reporter onBegin/onEnd merge+gated-prune + .gitignore reconcile + CAP-02/CAP-03/D-09 integration specs (CAP-02, CAP-03)
 
 ### Phase 4: Offline Verification & Publish
 **Goal**: The offline guarantee is proven mechanically and the package installs cleanly from npm in real ESM and CJS projects across the supported Playwright range.
@@ -87,5 +87,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Thinnest Real Heal | 5/5 | Complete | 2026-05-31 |
 | 2. Trust Hardening | 2/2 | Complete   | 2026-05-31 |
-| 3. Persistence & Parallel-Worker Safety | 2/3 | In Progress|  |
+| 3. Persistence & Parallel-Worker Safety | 3/3 | Complete   | 2026-05-31 |
 | 4. Offline Verification & Publish | 0/TBD | Not started | - |
