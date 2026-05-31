@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>selfmend fixture — broken + replay-failing</title>
+    <style>
+      /* A full-viewport overlay that intercepts pointer events, so a click on
+         the (correctly matched) submit button can never actually land. The heal
+         match SUCCEEDS (identity intact) but the replayed click TIMES OUT —
+         exercising WR-03: a failing replay must surface the ORIGINAL error and
+         must NOT over-report a heal. */
+      #blocker {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.01);
+        z-index: 9999;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>selfmend fixture app</h1>
+
+      <form id="signup-form">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" placeholder="you@example.com" />
+
+        <!--
+          SAME semantic submit button as index.html (identity signals intact:
+          data-testid, text "Submit", role, aria-label, position) but the
+          volatile ".btn-primary" class is renamed, so the original selector
+          breaks and a high-confidence heal IS found. The overlay below then
+          makes the REPLAYED click time out.
+        -->
+        <button
+          type="submit"
+          data-testid="submit-btn"
+          class="btn btn-cta"
+          role="button"
+          aria-label="Submit the signup form"
+        >
+          Submit
+        </button>
+      </form>
+
+      <p id="status" data-testid="status">idle</p>
+    </main>
+
+    <div id="blocker"></div>
+  </body>
+</html>
