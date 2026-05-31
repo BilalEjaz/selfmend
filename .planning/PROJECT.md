@@ -25,12 +25,14 @@ When a test fails only because a selector changed (not because the app is actual
 - ✓ When no candidate clears the threshold, the plugin does not force a heal and the test fails normally (no false greens) — Phase 1 (verified by control test)
 - ✓ At the end of a run, the plugin prints a boxed console summary of each heal (original selector, healed target, confidence) — Phase 1
 - ✓ Healing can be toggled on/off via plugin config — Phase 1
+- ✓ Hardened trust gates: configurable confidence floor + absolute-gap second-best margin gate (default 0.05); ambiguous look-alikes are refused, not healed — Phase 2
+- ✓ No-force-green proven: empty / below-floor / ambiguous all fail normally; refused heals are reported but never suppress the failure — Phase 2
+- ✓ Report distinguishes healed from could-not-heal (locator, reason, best score), configurable floor + margin — Phase 2
 
 ### Active
 
 <!-- Current scope. Building toward these. v1 = locator healing only. -->
 
-- [ ] Hardened trust gates: configurable confidence floor + second-best margin gate (Phase 2)
 - [ ] Cross-run persistence and parallel-worker-safe baseline store (Phase 3)
 - [ ] The entire healing path proven fully offline by a network-blocked test (Phase 4); offline-by-construction already holds (no network/AI/telemetry deps)
 
@@ -92,4 +94,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-31 after Phase 1 (Thinnest Real Heal) completion: end-to-end locator self-heal working on real Chromium, 36 unit + 16 integration tests green, code review clean.*
+*Last updated: 2026-05-31 after Phase 2 (Trust Hardening) completion: floor + second-best margin gates enforced in the pure core, no-force-green proven, could-not-heal audit trail. 56 unit + 17 integration tests green, code review clean.*
