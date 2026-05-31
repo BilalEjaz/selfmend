@@ -9,9 +9,11 @@ export default defineConfig({
   testIgnore: ["**/*.unit.test.ts"],
   workers: 1,
   fullyParallel: false,
-  reporter: "list",
-  // selfmend reporter slot — wired in plan 01-05:
-  // reporter: [["list"], ["selfmend/reporter"]],
+  // selfmend's summary-only reporter (REP-01) runs alongside the list reporter:
+  // it reads `selfmend-heal` attachments and prints the boxed heal summary at
+  // end of run. Pointed at the local source here; consumers add the published
+  // reporter export (see README) to their own config.
+  reporter: [["list"], ["./src/reporter/reporter.ts"]],
   projects: [
     {
       name: "chromium",
