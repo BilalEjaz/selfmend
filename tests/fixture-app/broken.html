@@ -14,17 +14,18 @@
         <input id="email" name="email" type="email" placeholder="you@example.com" />
 
         <!--
-          SAME semantic button as index.html, but the PRIMARY selector is mutated:
-            - data-testid renamed: "submit-btn" -> "primary-action"
-            - class changed:       "btn-primary" -> "btn-cta"
-          The healing signals (visible text "Submit", role=button, position in
-          #signup-form, aria-label) are unchanged, so a correct heal IS possible.
-          A locator pinned to [data-testid="submit-btn"] / .btn-primary will break
-          and must be healed to this element.
+          SAME semantic button as index.html. The PRIMARY (class-based) selector
+          is mutated to model the common "selector churn" break:
+            - class changed: "btn-primary" -> "btn-cta"
+          The strong identity signals (data-testid="submit-btn", visible text
+          "Submit", role=button, position in #signup-form, aria-label) are ALL
+          unchanged, so a locator pinned to the volatile ".btn-primary" class
+          breaks while the element's identity is fully recoverable — a correct,
+          high-confidence heal IS possible (above the conservative 0.9 floor).
         -->
         <button
           type="submit"
-          data-testid="primary-action"
+          data-testid="submit-btn"
           class="btn btn-cta"
           role="button"
           aria-label="Submit the signup form"
