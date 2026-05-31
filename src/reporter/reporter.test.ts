@@ -1,12 +1,42 @@
 import { describe, it, expect } from "vitest";
 import pc from "picocolors";
 
-import SelfmendReporter, { stripAnsi } from "./reporter.js";
+import SelfmendReporter, {
+  stripAnsi,
+  isComplete,
+  shouldPrune,
+} from "./reporter.js";
+import { mergeShards, refresh, prune } from "../store/merge.js";
+import { STORE_FORMAT_VERSION, type ShardFile } from "../store/schema.js";
+import type { Fingerprint } from "../matching/types.js";
 import {
   HEAL_ATTACHMENT_NAME,
   type HealEvent,
   type SelfmendEvent,
 } from "../integration/events.js";
+
+/** A minimal valid fingerprint for the merge/prune gate tests. */
+function fp(text: string): Fingerprint {
+  return {
+    tag: "button",
+    role: "button",
+    text,
+    testId: "",
+    attrs: {},
+    ordinal: 0,
+    parentTag: "form",
+    neighbourSignature: "",
+  };
+}
+
+/** A FullConfig-shaped stub carrying only the fields isComplete reads. */
+function cfg(over: Partial<{ grep: unknown; grepInvert: unknown; shard: unknown }>) {
+  return {
+    grep: over.grep ?? /.*/,
+    grepInvert: "grepInvert" in over ? over.grepInvert : null,
+    shard: "shard" in over ? over.shard : null,
+  } as never;
+}
 
 /**
  * Build a TestResult-like object carrying heal attachments. The body is a tiny
@@ -259,5 +289,96 @@ describe("SelfmendReporter could-not-heal section (REP-02, D-04)", () => {
     );
     const out = visible(reporter.render());
     expect(out).not.toContain("could NOT heal");
+  });
+});
+
+describe("isComplete completeness predicate (D-09, Open Q2/A3)", () => {
+  it("is TRUE for the default match-all run (grep /.*/ , null grepInvert, null shard)", () => {
+    expect(isComplete(cfg({ grep: /.*/ }))).toBe(true);
+  });
+
+  it("handles BOTH the /.*/ RegExp and an empty-array grep default (Open Q2/A3)", () => {
+    // The 1.60 default is /.*/, but the predicate must be robust to either
+    // representation so completeness detection does not silently break.
+    expect(isComplete(cfg({ grep: [] }))).toBe(true);
+    expect(isComplete(cfg({ grep: [/.*/] }))).toBe(true);
+  });
+
+  it("is FALSE when --grep narrows the run", () => {
+    expect(isComplete(cfg({ grep: /@smoke/ }))).toBe(false);
+    expect(isComplete(cfg({ grep: [/@smoke/] }))).toBe(false);
+  });
+
+  it("is FALSE when grepInvert is set (--grep-invert)", () => {
+    expect(isComplete(cfg({ grep: /.*/, grepInvert: /@slow/ }))).toBe(false);
+  });
+
+  it("is FALSE when shard is set (--shard)", () => {
+    expect(isComplete(cfg({ grep: /.*/, shard: { total: 2, current: 1 } }))).toBe(
+      false,
+    );
+  });
+});
+
+describe("shouldPrune gate (D-08 refresh always / D-09 prune opt-in + complete-run-only)", () => {
+  it("prunes ONLY when complete AND passed AND SELFMEND_PRUNE is set", () => {
+    expect(shouldPrune(true, "passed", "1")).toBe(true);
+  });
+
+  it("does NOT prune on an incomplete (filtered) run even if passed + opted in", () => {
+    expect(shouldPrune(false, "passed", "1")).toBe(false);
+  });
+
+  it("does NOT prune when the run did not pass", () => {
+    expect(shouldPrune(true, "failed", "1")).toBe(false);
+    expect(shouldPrune(true, "timedout", "1")).toBe(false);
+    expect(shouldPrune(true, "interrupted", "1")).toBe(false);
+  });
+
+  it("does NOT prune when SELFMEND_PRUNE is unset/empty (opt-in gate)", () => {
+    expect(shouldPrune(true, "passed", undefined)).toBe(false);
+    expect(shouldPrune(true, "passed", "")).toBe(false);
+  });
+});
+
+describe("merge -> refresh -> (gated prune) decision over the pure layer (D-08/D-09)", () => {
+  const baseline = {
+    version: STORE_FORMAT_VERSION,
+    entries: { "k-old": fp("OldButton") },
+  };
+  // One worker shard captured a NEW key but did NOT see the old key this run.
+  const shards: ShardFile[] = [
+    {
+      version: STORE_FORMAT_VERSION,
+      captures: { "k-new": fp("NewButton") },
+      seen: ["k-new"],
+    },
+  ];
+
+  it("refresh-only (prune NOT applied): retains the unseen old key (D-08)", () => {
+    const merged = mergeShards(shards);
+    const next = refresh(baseline, merged);
+    // No prune: both keys survive.
+    expect(Object.keys(next.entries).sort()).toEqual(["k-new", "k-old"]);
+  });
+
+  it("prune applied (complete+passed+opt-in): drops the unseen old key (D-09)", () => {
+    const merged = mergeShards(shards);
+    let next = refresh(baseline, merged);
+    if (shouldPrune(true, "passed", "1")) {
+      next = prune(next, merged.seen);
+    }
+    // Old key was not seen this run -> pruned; only the captured key remains.
+    expect(Object.keys(next.entries)).toEqual(["k-new"]);
+  });
+
+  it("filtered run refreshes but does NOT prune (Pitfall 2): old key retained", () => {
+    const merged = mergeShards(shards);
+    let next = refresh(baseline, merged);
+    // complete=false -> gate closed even though passed + opt-in.
+    if (shouldPrune(false, "passed", "1")) {
+      next = prune(next, merged.seen);
+    }
+    expect(Object.keys(next.entries).sort()).toEqual(["k-new", "k-old"]);
   });
 });
