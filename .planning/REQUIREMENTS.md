@@ -12,11 +12,11 @@ Requirements for the initial release. v1 is locator healing only.
 ### Installation & Integration
 
 - [x] **INST-01**: User can add the plugin to an existing Playwright project via npm install plus a single config or fixture import
-- [ ] **INST-02**: The plugin works with a project's existing `page` and locator usage without requiring tests to be rewritten
+- [x] **INST-02**: The plugin works with a project's existing `page` and locator usage without requiring tests to be rewritten
 
 ### Capture
 
-- [ ] **CAP-01**: On a passing run, the plugin records an element fingerprint (text, role, test-id, attributes, neighbour context, DOM position) for each successfully resolved locator
+- [x] **CAP-01**: On a passing run, the plugin records an element fingerprint (text, role, test-id, attributes, neighbour context, DOM position) for each successfully resolved locator
 - [ ] **CAP-02**: Captured fingerprints persist to a local baseline store that survives across runs
 - [ ] **CAP-03**: Baseline capture is safe under Playwright parallel workers, with no store corruption or races
 
@@ -84,8 +84,8 @@ Which phases cover which requirements. Populated during roadmap creation.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | INST-01 | Phase 1 | Complete |
-| INST-02 | Phase 1 | Pending |
-| CAP-01 | Phase 1 | Pending |
+| INST-02 | Phase 1 | Complete |
+| CAP-01 | Phase 1 | Complete |
 | CAP-02 | Phase 3 | Pending |
 | CAP-03 | Phase 3 | Pending |
 | MATCH-01 | Phase 1 | Complete |

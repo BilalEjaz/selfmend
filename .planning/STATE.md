@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Completed 01-02-PLAN.md
-last_updated: "2026-05-31T01:42:01.448Z"
+last_updated: "2026-05-31T01:53:06.096Z"
 last_activity: 2026-05-31
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 5
-  completed_plans: 3
+  completed_plans: 4
   percent: 0
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-05-31)
 ## Current Position
 
 Phase: 01 (Thinnest Real Heal) — EXECUTING
-Plan: 4 of 5
+Plan: 5 of 5
 Status: Ready to execute
 Last activity: 2026-05-31
 
-Progress: [██████░░░░] 60%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 
@@ -55,6 +55,7 @@ Progress: [██████░░░░] 60%
 | Phase 01 P01 | 3 | 2 tasks | 12 files |
 | Phase 01 P02 | 4 | 3 tasks | 5 files |
 | Phase 01 P03 | 7 | 2 tasks | 3 files |
+| Phase 01 P04 | 7 | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -73,6 +74,9 @@ Recent decisions affecting current work:
 - [Phase ?]: [01-03]: live-rebind PROVEN on PW 1.60 — catch errors.TimeoutError (instanceof OR name), rebind via fresh page.locator(newSel), replay; never pre-check count()
 - [Phase ?]: [01-03]: Locator Proxy partition — ACTION set heals, CHAIN set re-wraps, assertions pass through expect matchers (sacred by construction); FINDINGS.md is the plan-04 contract
 - [Phase ?]: [01-03]: timeout budget = explicit {timeout} on real attempt + separate bounded replay; measured heal overhead ~4% of real attempt (realAttempt=1207ms, heal=48ms)
+- [Phase ?]: [01-04]: live heal loop end-to-end — capture-on-success + catch real TimeoutError + score via locked pure core + rebind via fresh page.locator above the 0.9 floor; 8 PW + 26 vitest green
+- [Phase ?]: [01-04]: broken.html fixed to keep stable test-id and mutate only the volatile class so the locked scorer reaches a genuine high-confidence heal (scorer untouched, Rule 1)
+- [Phase ?]: [01-04]: throwaway rebind spike consumed + deleted; FINDINGS contract now realized in src/integration (Proxy method partition, two-budget timeout, fresh page.locator rebind)
 
 ### Pending Todos
 
@@ -92,6 +96,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-31T01:41:35.795Z
+Last session: 2026-05-31T01:52:58.294Z
 Stopped at: Completed 01-02-PLAN.md
 Resume file: None
