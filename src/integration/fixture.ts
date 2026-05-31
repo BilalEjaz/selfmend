@@ -11,6 +11,7 @@ import {
 import {
   wrapLocator,
   createOccurrenceCounter,
+  describeArgs,
   type HealContext,
 } from "./locator-proxy.js";
 
@@ -53,24 +54,35 @@ export interface SelfmendWorkerFixtures {
 }
 
 /**
- * Build a best-effort description of a factory call's arguments for the store
- * key, so distinct locators on a page get distinct baselines.
+ * Build the store-key selector string for a page-factory call (IN-02). Uses the
+ * SINGLE hardened {@link describeArgs} shared with the locator proxy — NOT a
+ * weaker local copy — so a non-serializable factory arg (a circular object, a
+ * `Locator` passed as `{ has }`, a `RegExp`) folds in a distinguishing
+ * `<typeof#N>` token instead of collapsing to `""`. That keeps two genuinely
+ * different factory calls on distinct baseline keys and closes the LO-02/CR-01
+ * collision class on the fixture path. `nextOccurrence` is the per-test counter
+ * threaded from the page fixture so the distinguishing tokens are deterministic
+ * within a test. Exported for unit testing.
  */
-function describeArgs(args: unknown[]): string {
-  try {
-    return args
-      .map((a) => (typeof a === "string" ? a : JSON.stringify(a) ?? ""))
-      .join(",");
-  } catch {
-    return "";
-  }
+export function buildPageSelector(
+  prop: string,
+  args: unknown[],
+  nextOccurrence: (contentKey: string) => number,
+): string {
+  return `page.${prop}(${describeArgs(args, nextOccurrence)})`;
 }
 
 /**
  * Wrap a real `page` so its locator-factory methods return healing-aware
- * Locators. Non-factory members pass straight through to the real page.
+ * Locators. Non-factory members pass straight through to the real page. The
+ * shared per-test `nextOccurrence` is threaded into the hardened arg
+ * stringifier (IN-02) so non-serializable factory args stay collision-distinct.
  */
-function wrapPage(realPage: Page, makeCtx: () => HealContext): Page {
+function wrapPage(
+  realPage: Page,
+  nextOccurrence: (contentKey: string) => number,
+  makeCtx: () => HealContext,
+): Page {
   return new Proxy(realPage, {
     get(target, prop, receiver) {
       const value = Reflect.get(target, prop, receiver) as unknown;
@@ -82,7 +94,7 @@ function wrapPage(realPage: Page, makeCtx: () => HealContext): Page {
             target,
             args,
           );
-          const selector = `page.${prop}(${describeArgs(args)})`;
+          const selector = buildPageSelector(prop, args, nextOccurrence);
           return wrapLocator(real, selector, makeCtx());
         };
       }
@@ -141,7 +153,7 @@ export const healingFixture = base.extend<
     // File-rooted, stable test title (D-04). titlePath is [file, ...describes,
     // test] — joining it scopes the occurrence key to this exact test.
     const testTitle = testInfo.titlePath.join(" > ");
-    const wrapped = wrapPage(page, () => ({
+    const wrapped = wrapPage(page, nextOccurrence, () => ({
       page,
       store: selfmendStore,
       config: selfmendConfig,
