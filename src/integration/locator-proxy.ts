@@ -52,8 +52,20 @@ const ACTION = new Set<string>([
   "blur",
   "dragTo",
   "scrollIntoViewIfNeeded",
-  "waitFor",
 ]);
+
+/**
+ * Methods that capture-on-success but must NEVER heal-on-timeout (WR-01).
+ *
+ * `waitFor` is closer to an assertion than an action: `waitFor({state:'hidden'})`
+ * times out precisely when the element is still VISIBLE, so routing its timeout
+ * through the "find the element" heal would invert the user's intent (a
+ * semantic false green) and is the closest thing in the action surface to a
+ * HEAL-02 state-poll mis-fire. We still fingerprint on a SUCCESSFUL wait (a
+ * resolved `waitFor` is a fine capture point), but a `waitFor` timeout always
+ * propagates unchanged.
+ */
+const CAPTURE_ONLY = new Set<string>(["waitFor"]);
 
 /** Methods that return a new Locator and must be re-wrapped to keep healing. */
 const CHAIN = new Set<string>([
@@ -164,6 +176,11 @@ export function wrapLocator(
           actionOrHeal(target, selector, key, prop, args, ctx);
       }
 
+      if (typeof prop === "string" && CAPTURE_ONLY.has(prop)) {
+        return (...args: unknown[]) =>
+          captureOnly(target, key, prop, args, ctx);
+      }
+
       if (typeof prop === "string" && CHAIN.has(prop)) {
         return (...args: unknown[]) => {
           const next = (value as (...a: unknown[]) => Locator).apply(
@@ -200,6 +217,45 @@ function describeArgs(args: unknown[]): string {
  * Run a single action method against the real Locator; on a real TimeoutError,
  * run the pure heal decision and (only above the floor) rebind + replay.
  */
+/**
+ * Best-effort capture-on-success for the given key (deduped per run). Never
+ * fails a passing action because the fingerprint round-trip hiccuped.
+ */
+async function captureOnSuccess(
+  real: Locator,
+  key: string,
+  ctx: HealContext,
+): Promise<void> {
+  if (!ctx.config.enabled || ctx.store.has(key)) return;
+  try {
+    const fp = await captureFingerprint(real, ctx.config.testIdAttr);
+    ctx.store.set(key, fp);
+  } catch {
+    // Capture is best-effort.
+  }
+}
+
+/**
+ * Run a CAPTURE_ONLY method (e.g. `waitFor`): fingerprint on success, but on
+ * ANY failure (including a TimeoutError) propagate unchanged — never heal
+ * (WR-01). A `waitFor` is assertion-like, so its timeout must not route through
+ * the find-the-element heal path.
+ */
+async function captureOnly(
+  real: Locator,
+  key: string,
+  method: string,
+  args: unknown[],
+  ctx: HealContext,
+): Promise<unknown> {
+  const invoke = real[method as keyof Locator] as (
+    ...a: unknown[]
+  ) => Promise<unknown>;
+  const result = await invoke.apply(real, args);
+  await captureOnSuccess(real, key, ctx);
+  return result;
+}
+
 async function actionOrHeal(
   real: Locator,
   selector: string,
@@ -216,15 +272,7 @@ async function actionOrHeal(
     // Real attempt: keep the user's configured timeout (auto-wait semantics).
     const result = await invoke.apply(real, args);
     // Green path: capture once per key per run (dedup-guarded).
-    if (ctx.config.enabled && !ctx.store.has(key)) {
-      try {
-        const fp = await captureFingerprint(real, ctx.config.testIdAttr);
-        ctx.store.set(key, fp);
-      } catch {
-        // Capture is best-effort; never fail a passing action because the
-        // fingerprint round-trip hiccuped.
-      }
-    }
+    await captureOnSuccess(real, key, ctx);
     return result;
   } catch (err) {
     if (!isTimeoutError(err)) throw err; // not a resolution failure -> propagate
