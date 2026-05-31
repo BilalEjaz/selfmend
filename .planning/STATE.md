@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Phase 1 context gathered
-last_updated: "2026-05-31T01:11:18.169Z"
-last_activity: 2026-05-31 -- Phase 1 planning complete
+last_updated: "2026-05-31T01:27:13.942Z"
+last_activity: 2026-05-31
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 5
-  completed_plans: 0
+  completed_plans: 1
   percent: 0
 ---
 
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-31)
 
 **Core value:** When a test fails only because a selector changed (not because the app is actually broken), the suite keeps running and tells the team exactly what changed, without any data leaving their CI.
-**Current focus:** Phase 1 — Thinnest Real Heal
+**Current focus:** Phase 01 — Thinnest Real Heal
 
 ## Current Position
 
-Phase: 1 of 4 (Thinnest Real Heal)
-Plan: 0 of TBD in current phase
+Phase: 01 (Thinnest Real Heal) — EXECUTING
+Plan: 2 of 5
 Status: Ready to execute
-Last activity: 2026-05-31 -- Phase 1 planning complete
+Last activity: 2026-05-31
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██░░░░░░░░] 20%
 
 ## Performance Metrics
 
@@ -52,6 +52,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: -
 
 *Updated after each plan completion*
+| Phase 01 P01 | 3 | 2 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -63,6 +64,8 @@ Recent decisions affecting current work:
 - [Roadmap]: MVP vertical-slice mode — Phase 1 ships the thinnest REAL end-to-end heal on a single-worker simple case; later phases deepen signals/gates, add parallel safety, then publish.
 - [Roadmap]: Scoring and heal-decision logic stays pure (Playwright-free) and is built test-first; the false-green guarantee (confidence floor + second-best margin + no-force-heal) is enforced in code as explicit success criteria.
 - [Roadmap]: The live locator-rebind hook is the riskiest unknown and is de-risked inside Phase 1 (research likely needed) before the integration design is deepened.
+- [Phase ?]: [01-01]: selfmend config on-by-default (enabled:true, D-08) + conservative 0.9 threshold (D-09); defaults derived from the zod schema so they cannot drift
+- [Phase ?]: [01-01]: dual-package exports use per-format type conditions (.d.mts/.d.cts) matching tsdown output; verified with publint + attw
 
 ### Pending Todos
 
@@ -82,6 +85,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-31T00:49:31.830Z
+Last session: 2026-05-31T01:26:49.445Z
 Stopped at: Phase 1 context gathered
-Resume file: .planning/phases/01-thinnest-real-heal/01-CONTEXT.md
+Resume file: None

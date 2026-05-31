@@ -11,7 +11,7 @@ Requirements for the initial release. v1 is locator healing only.
 
 ### Installation & Integration
 
-- [ ] **INST-01**: User can add the plugin to an existing Playwright project via npm install plus a single config or fixture import
+- [x] **INST-01**: User can add the plugin to an existing Playwright project via npm install plus a single config or fixture import
 - [ ] **INST-02**: The plugin works with a project's existing `page` and locator usage without requiring tests to be rewritten
 
 ### Capture
@@ -43,7 +43,7 @@ Requirements for the initial release. v1 is locator healing only.
 
 ### Configuration
 
-- [ ] **CFG-01**: User can toggle healing on or off via plugin config
+- [x] **CFG-01**: User can toggle healing on or off via plugin config
 - [ ] **CFG-02**: User can configure the confidence floor and the margin gate
 
 ## v2 Requirements
@@ -83,7 +83,7 @@ Which phases cover which requirements. Populated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INST-01 | Phase 1 | Pending |
+| INST-01 | Phase 1 | Complete |
 | INST-02 | Phase 1 | Pending |
 | CAP-01 | Phase 1 | Pending |
 | CAP-02 | Phase 3 | Pending |
@@ -97,7 +97,7 @@ Which phases cover which requirements. Populated during roadmap creation.
 | REP-01 | Phase 1 | Pending |
 | REP-02 | Phase 2 | Pending |
 | PRIV-01 | Phase 4 | Pending |
-| CFG-01 | Phase 1 | Pending |
+| CFG-01 | Phase 1 | Complete |
 | CFG-02 | Phase 2 | Pending |
 
 **Coverage:**
