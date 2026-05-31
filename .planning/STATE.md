@@ -1,0 +1,69 @@
+# Project State
+
+## Project Reference
+
+See: .planning/PROJECT.md (updated 2026-05-31)
+
+**Core value:** When a test fails only because a selector changed (not because the app is actually broken), the suite keeps running and tells the team exactly what changed, without any data leaving their CI.
+**Current focus:** Phase 1 — Thinnest Real Heal
+
+## Current Position
+
+Phase: 1 of 4 (Thinnest Real Heal)
+Plan: 0 of TBD in current phase
+Status: Ready to plan
+Last activity: 2026-05-31 — Roadmap created (4 phases, coarse, MVP vertical-slice)
+
+Progress: [░░░░░░░░░░] 0%
+
+## Performance Metrics
+
+**Velocity:**
+- Total plans completed: 0
+- Average duration: - min
+- Total execution time: 0 hours
+
+**By Phase:**
+
+| Phase | Plans | Total | Avg/Plan |
+|-------|-------|-------|----------|
+| - | - | - | - |
+
+**Recent Trend:**
+- Last 5 plans: -
+- Trend: -
+
+*Updated after each plan completion*
+
+## Accumulated Context
+
+### Decisions
+
+Decisions are logged in PROJECT.md Key Decisions table.
+Recent decisions affecting current work:
+
+- [Roadmap]: MVP vertical-slice mode — Phase 1 ships the thinnest REAL end-to-end heal on a single-worker simple case; later phases deepen signals/gates, add parallel safety, then publish.
+- [Roadmap]: Scoring and heal-decision logic stays pure (Playwright-free) and is built test-first; the false-green guarantee (confidence floor + second-best margin + no-force-heal) is enforced in code as explicit success criteria.
+- [Roadmap]: The live locator-rebind hook is the riskiest unknown and is de-risked inside Phase 1 (research likely needed) before the integration design is deepened.
+
+### Pending Todos
+
+None yet.
+
+### Blockers/Concerns
+
+- [Phase 1]: Live locator-rebind mechanics flagged for a phase-1 spike / research — how to intercept a genuine post-timeout resolution failure and replay against a substituted element via the public fixture/wrapper surface, validated across Playwright minors. Resolve before committing the integration design.
+
+## Deferred Items
+
+Items acknowledged and carried forward from previous milestone close:
+
+| Category | Item | Status | Deferred At |
+|----------|------|--------|-------------|
+| *(none)* | | | |
+
+## Session Continuity
+
+Last session: 2026-05-31
+Stopped at: ROADMAP.md and STATE.md written; REQUIREMENTS.md traceability populated
+Resume file: None
