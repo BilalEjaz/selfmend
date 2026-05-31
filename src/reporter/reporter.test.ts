@@ -341,6 +341,72 @@ describe("isComplete completeness predicate (D-09, Open Q2/A3)", () => {
       isComplete(cfg({ grep: /.*/ }), ["node", "pw", "test", "--project", "ci"]),
     ).toBe(false);
   });
+
+  it("is FALSE when a positional file-path/test-path filter narrows the run (WR-01)", () => {
+    // `npx playwright test tests/login.spec.ts` narrows the run to one file via
+    // a BARE positional token that does not start with `-`. The 1.60 runner
+    // applies it as a separate filter layer (like --grep), so FullConfig.grep
+    // stays match-all. A passing SELFMEND_PRUNE run on this argv must NOT be
+    // classified complete, or prune deletes every baseline outside that file.
+    expect(
+      isComplete(cfg({ grep: /.*/ }), [
+        "node",
+        "playwright",
+        "test",
+        "tests/login.spec.ts",
+      ]),
+    ).toBe(false);
+    // A file:line selector is also a positional filter.
+    expect(
+      isComplete(cfg({ grep: /.*/ }), [
+        "node",
+        "playwright",
+        "test",
+        "tests/login.spec.ts:42",
+      ]),
+    ).toBe(false);
+    // A bare title-substring filter (positional, after `test`) narrows too.
+    expect(
+      isComplete(cfg({ grep: /.*/ }), ["node", "playwright", "test", "login"]),
+    ).toBe(false);
+  });
+
+  it("does NOT mistake a value-flag's value for a positional filter (WR-01)", () => {
+    // `--workers 4`: the `4` is consumed by `--workers`, NOT a path filter, so a
+    // plain `--workers 4` run stays COMPLETE. Same for other value-flags whose
+    // values are bare tokens.
+    expect(
+      isComplete(cfg({ grep: /.*/ }), [
+        "node",
+        "playwright",
+        "test",
+        "--workers",
+        "4",
+      ]),
+    ).toBe(true);
+    expect(
+      isComplete(cfg({ grep: /.*/ }), [
+        "node",
+        "playwright",
+        "test",
+        "--reporter",
+        "list",
+      ]),
+    ).toBe(true);
+  });
+
+  it("treats a positional filter as narrowing even WITH a clean grep config and shouldPrune stays closed (WR-01 / D-09)", () => {
+    // End-to-end of the gap: a passing single-file run with SELFMEND_PRUNE set
+    // must NOT prune, because isComplete is false on a positional filter.
+    const complete = isComplete(cfg({ grep: /.*/ }), [
+      "node",
+      "playwright",
+      "test",
+      "tests/login.spec.ts",
+    ]);
+    expect(complete).toBe(false);
+    expect(shouldPrune(complete, "passed", "1")).toBe(false);
+  });
 });
 
 describe("shouldPrune gate (D-08 refresh always / D-09 prune opt-in + complete-run-only)", () => {
