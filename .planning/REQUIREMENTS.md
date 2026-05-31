@@ -17,8 +17,8 @@ Requirements for the initial release. v1 is locator healing only.
 ### Capture
 
 - [x] **CAP-01**: On a passing run, the plugin records an element fingerprint (text, role, test-id, attributes, neighbour context, DOM position) for each successfully resolved locator
-- [ ] **CAP-02**: Captured fingerprints persist to a local baseline store that survives across runs
-- [ ] **CAP-03**: Baseline capture is safe under Playwright parallel workers, with no store corruption or races
+- [x] **CAP-02**: Captured fingerprints persist to a local baseline store that survives across runs
+- [x] **CAP-03**: Baseline capture is safe under Playwright parallel workers, with no store corruption or races
 
 ### Matching & Heal Decision
 
@@ -86,8 +86,8 @@ Which phases cover which requirements. Populated during roadmap creation.
 | INST-01 | Phase 1 | Complete |
 | INST-02 | Phase 1 | Complete |
 | CAP-01 | Phase 1 | Complete |
-| CAP-02 | Phase 3 | Pending |
-| CAP-03 | Phase 3 | Pending |
+| CAP-02 | Phase 3 | Complete |
+| CAP-03 | Phase 3 | Complete |
 | MATCH-01 | Phase 1 | Complete |
 | MATCH-02 | Phase 2 | Complete |
 | MATCH-03 | Phase 2 | Complete |

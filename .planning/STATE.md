@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 3 context gathered
-last_updated: "2026-05-31T13:34:25.190Z"
-last_activity: 2026-05-31 -- Phase 3 planning complete
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-05-31T14:40:40.179Z"
+last_activity: 2026-05-31
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 10
-  completed_plans: 7
+  completed_plans: 8
   percent: 50
 ---
 
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-31)
 
 **Core value:** When a test fails only because a selector changed (not because the app is actually broken), the suite keeps running and tells the team exactly what changed, without any data leaving their CI.
-**Current focus:** Phase 3 — persistence & parallel worker safety
+**Current focus:** Phase 03 — Persistence & Parallel-Worker Safety
 
 ## Current Position
 
-Phase: 3
-Plan: Not started
+Phase: 03 (Persistence & Parallel-Worker Safety) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
-Last activity: 2026-05-31 -- Phase 3 planning complete
+Last activity: 2026-05-31
 
-Progress: [██████████] 100%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 
@@ -60,6 +60,7 @@ Progress: [██████████] 100%
 | Phase 01 P05 | 3 | 3 tasks | 8 files |
 | Phase 02 P01 | 5 | 3 tasks | 8 files |
 | Phase 02 P02 | 6 min | 4 tasks | 8 files |
+| Phase 03 P01 | 9 | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -87,6 +88,9 @@ Recent decisions affecting current work:
 - [Phase ?]: [02-01]: weight-ordering invariant pinned relatively (identity > structure by >0.05) against fixed SIGNAL_WEIGHTS, scorer untouched (D-09); global margin config key default 0.05, threshold unchanged (D-07, D-08)
 - [Phase ?]: [02-02]: transport widened to SelfmendEvent tagged union on the unchanged selfmend-heal attachment; missing kind decodes as healed (back-compat); refused scoped to 3 post-scoring reasons (D-05)
 - [Phase ?]: [02-02]: proxy attaches refused event then unconditionally re-throws (attach guarded, throw unguarded) so observability never false-greens (D-06, MATCH-04); reporter prints healed box then separate could-not-heal section (REP-02, D-04); 0.05 margin empirically refuses an ambiguous duplicate while single-survivor heal still heals
+- [Phase ?]: [03-01]: store-format version is a z.literal gate — mismatch/malformed safeParses to canonical EMPTY (ignore-and-recapture), never throws (D-10)
+- [Phase ?]: [03-01]: strict fingerprintSchema (eight derived signals only) rejects raw-DOM keys so PII never persists to the committed file (D-02); serializer rebuilds in fixed field + sorted key order for byte-stable zero-churn output (D-03)
+- [Phase ?]: [03-01]: mergeShards same-key precedence = larger value-derived compare key (not array position) so merge is order-independent (D-13); prune is a two-arg pure fn with NO completeness flag, gating deferred to reporter (D-09)
 
 ### Pending Todos
 
@@ -106,6 +110,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-31T13:09:52.826Z
-Stopped at: Phase 3 context gathered
-Resume file: .planning/phases/03-persistence-parallel-worker-safety/03-CONTEXT.md
+Last session: 2026-05-31T14:40:40.171Z
+Stopped at: Completed 03-01-PLAN.md
+Resume file: None

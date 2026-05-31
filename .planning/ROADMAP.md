@@ -62,7 +62,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. A fully parallel multi-worker run produces no store corruption or lost writes (per-worker shards merged deterministically, verified by a concurrent-write test)
   3. The persisted store holds only minimal derived signals, not raw DOM content, and is human-inspectable
 **Plans**: 3 plans
-- [ ] 03-01-PLAN.md — Pure store layer (TDD): versioned zod schema, deterministic serializer, merge+refresh+prune; Playwright/fs-free (CAP-02, CAP-03)
+- [x] 03-01-PLAN.md — Pure store layer (TDD): versioned zod schema, deterministic serializer, merge+refresh+prune; Playwright/fs-free (CAP-02, CAP-03)
 - [ ] 03-02-PLAN.md — fs persistence adapter (Windows-safe atomic write, parallelIndex shards) + occurrence-based identity key swap across proxy/store/fixture (CAP-02, CAP-03)
 - [ ] 03-03-PLAN.md — Worker shard flush + Reporter onBegin/onEnd merge+gated-prune + .gitignore reconcile + CAP-02/CAP-03/D-09 integration specs (CAP-02, CAP-03)
 
@@ -87,5 +87,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Thinnest Real Heal | 5/5 | Complete | 2026-05-31 |
 | 2. Trust Hardening | 2/2 | Complete   | 2026-05-31 |
-| 3. Persistence & Parallel-Worker Safety | 0/3 | Not started | - |
+| 3. Persistence & Parallel-Worker Safety | 1/3 | In Progress|  |
 | 4. Offline Verification & Publish | 0/TBD | Not started | - |
