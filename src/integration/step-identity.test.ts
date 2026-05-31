@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 
 import {
   wrapLocator,
-  createStepCounter,
+  createOccurrenceCounter,
   describeArgs,
   type HealContext,
 } from "./locator-proxy.js";
@@ -12,12 +12,18 @@ import type { SelfmendConfig } from "../config/schema.js";
 /**
  * A store that records every identity key it is asked to build, so we can prove
  * two distinct resolutions of the SAME selector string get DISTINCT baseline
- * keys (CR-01) rather than colliding on a hardcoded step 0.
+ * keys (CR-01, now via the occurrence index) rather than colliding on a
+ * hardcoded occurrence 0.
  */
 class RecordingStore extends BaselineStore {
   readonly keys: string[] = [];
-  override identify(selector: string, testFile: string, step: number): string {
-    const key = super.identify(selector, testFile, step);
+  override identify(
+    selector: string,
+    testFile: string,
+    testTitle: string,
+    occurrence: number,
+  ): string {
+    const key = super.identify(selector, testFile, testTitle, occurrence);
     this.keys.push(key);
     return key;
   }
@@ -35,39 +41,42 @@ function fakeLocator(): import("@playwright/test").Locator {
   return {} as import("@playwright/test").Locator;
 }
 
-function ctxWith(store: RecordingStore, nextStep: () => number): HealContext {
+function ctxWith(
+  store: RecordingStore,
+  nextOccurrence: (contentKey: string) => number,
+): HealContext {
   return {
     page: {} as never,
     store,
     config,
     testInfo: { title: "t" } as never,
     testFile: "spec.ts",
+    testTitle: "t",
     replayTimeoutMs: 5000,
-    nextStep,
+    nextOccurrence,
   };
 }
 
-describe("per-test step disambiguator (CR-01)", () => {
-  it("createStepCounter yields a fresh monotonic sequence per counter", () => {
-    const a = createStepCounter();
-    const b = createStepCounter();
-    expect(a()).toBe(0);
-    expect(a()).toBe(1);
-    expect(a()).toBe(2);
+describe("per-test occurrence disambiguator (CR-01, occurrence key)", () => {
+  it("createOccurrenceCounter yields a fresh per-content sequence per counter", () => {
+    const a = createOccurrenceCounter();
+    const b = createOccurrenceCounter();
+    expect(a("k")).toBe(0);
+    expect(a("k")).toBe(1);
+    expect(a("k")).toBe(2);
     // A second counter (a second test) starts its own sequence.
-    expect(b()).toBe(0);
-    expect(b()).toBe(1);
+    expect(b("k")).toBe(0);
+    expect(b("k")).toBe(1);
   });
 
   it("two SEPARATE wrapLocator calls with the SAME selector get DISTINCT keys", () => {
-    // The BLOCKER: with a hardcoded step 0, two genuinely-different elements
-    // addressed by the same selector string at different points in a test
-    // collapse to one baseline key. A per-test monotonic step must keep them
-    // distinct so the second element can never heal against the first's
-    // fingerprint.
+    // The BLOCKER: with a hardcoded occurrence 0, two genuinely-different
+    // elements addressed by the same selector string at different points in a
+    // test collapse to one baseline key. A per-(content) occurrence index must
+    // keep them distinct so the second element can never heal against the
+    // first's fingerprint.
     const store = new RecordingStore();
-    const next = createStepCounter();
-    const ctx = ctxWith(store, next);
+    const ctx = ctxWith(store, createOccurrenceCounter());
 
     wrapLocator(fakeLocator(), "page.locator(button)", ctx);
     wrapLocator(fakeLocator(), "page.locator(button)", ctx);
@@ -80,10 +89,11 @@ describe("per-test step disambiguator (CR-01)", () => {
     // The footgun (same class as CR-01): JSON.stringify throws on a
     // circular/non-serializable chain arg and describeArgs USED to collapse it
     // to "". Two genuinely-different chained refinements then share the SAME
-    // chained-selector string -> the same baseline identity component -> a
-    // heal could be matched against the wrong element's fingerprint. A
-    // distinguishing token per non-serializable arg must keep them apart.
-    const next = createStepCounter();
+    // chained-selector string -> the same baseline identity component -> a heal
+    // could be matched against the wrong element's fingerprint. A distinguishing
+    // token per non-serializable arg (a per-content occurrence index) must keep
+    // them apart.
+    const next = createOccurrenceCounter();
 
     const circA: Record<string, unknown> = {};
     circA.self = circA; // JSON.stringify throws
@@ -101,7 +111,7 @@ describe("per-test step disambiguator (CR-01)", () => {
   });
 
   it("describeArgs stays stable for serializable args (no spurious churn)", () => {
-    const next = createStepCounter();
+    const next = createOccurrenceCounter();
     expect(describeArgs(["text"], next)).toBe("text");
     expect(describeArgs([{ hasText: "Save" }], next)).toBe('{"hasText":"Save"}');
   });
@@ -110,9 +120,9 @@ describe("per-test step disambiguator (CR-01)", () => {
     // The same Locator object (one factory call) used for both the capture
     // action and the later broken/heal action computes its key ONCE at
     // construction, so capture and heal correspond — this is the supported
-    // capture->heal pattern and must NOT be split by the step counter.
+    // capture->heal pattern and must NOT be split by the occurrence counter.
     const store = new RecordingStore();
-    const ctx = ctxWith(store, createStepCounter());
+    const ctx = ctxWith(store, createOccurrenceCounter());
 
     wrapLocator(fakeLocator(), "page.locator(.btn-primary)", ctx);
 
