@@ -29,12 +29,15 @@ When a test fails only because a selector changed (not because the app is actual
 - ✓ No-force-green proven: empty / below-floor / ambiguous all fail normally; refused heals are reported but never suppress the failure — Phase 2
 - ✓ Report distinguishes healed from could-not-heal (locator, reason, best score), configurable floor + margin — Phase 2
 
+- ✓ Cross-run persistence: a committed, versioned, deterministically-serialized `.selfmend/baseline.json` (derived signals only) survives across runs; heals on run N+1 from the committed file alone — Phase 3
+- ✓ Parallel-worker safety: lock-free per-worker shards (`parallelIndex`) merged in the Reporter at end-of-run with Windows-safe atomic write; no corruption/lost writes under `workers>1` — Phase 3
+- ✓ Cross-run-stable identity key (testFile + titlePath + selector + occurrence), replacing the fragile run-order step counter; refresh-on-pass + opt-in (`SELFMEND_PRUNE`) complete-run-only prune — Phase 3
+
 ### Active
 
 <!-- Current scope. Building toward these. v1 = locator healing only. -->
 
-- [ ] Cross-run persistence and parallel-worker-safe baseline store (Phase 3)
-- [ ] The entire healing path proven fully offline by a network-blocked test (Phase 4); offline-by-construction already holds (no network/AI/telemetry deps)
+- [ ] The entire healing path proven fully offline by a network-blocked test, then first npm publish (Phase 4); offline-by-construction already holds (no network/AI/telemetry deps)
 
 ### Out of Scope
 
@@ -94,4 +97,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-31 after Phase 2 (Trust Hardening) completion: floor + second-best margin gates enforced in the pure core, no-force-green proven, could-not-heal audit trail. 56 unit + 17 integration tests green, code review clean.*
+*Last updated: 2026-05-31 after Phase 3 (Persistence & Parallel-Worker Safety) completion: committed versioned baseline.json survives across runs, lock-free per-worker shards merged in the Reporter (Windows-safe atomic write), cross-run-stable occurrence key, opt-in complete-run-only prune. 125 unit + 21 integration tests green, code review clean. Only Phase 4 (offline proof + npm publish) remains.*
