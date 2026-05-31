@@ -1,0 +1,90 @@
+name: CI
+
+# Compatibility-matrix CI (D-05): the regression net AND the cross-version
+# Playwright compatibility proof. Runs the full suite (typecheck + vitest unit +
+# Playwright integration incl. the PRIV-01 offline test + build) across
+# node 22/24 x @playwright/test 1.42.0/1.60.0, then validates the publish
+# surface (publint + attw + npm pack --dry-run) on a single gated leg.
+#
+# RELEASE IS MANUAL (D-06): this workflow holds no npm auth token and has no
+# publish step. The first release is performed by the maintainer out-of-band
+# per RELEASING.md. Do not add publish automation or a registry secret here.
+#
+# Honest-floor rule (Open Q2): @playwright/test@1.42.0 is proven by the floor
+# leg of this matrix, not locally (only 1.60 is installed on the author's box).
+# If the 1.42.0 leg fails the suite, RAISE the declared peerDependencies floor
+# in package.json (and the README) to the lowest version that actually passes
+# CI rather than claim false support. Until this matrix has run green, the
+# declared `>=1.42` floor is CI-pending.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # fail-fast off: we want every leg's result so a single-version failure
+      # does not mask the compatibility picture across the whole matrix.
+      fail-fast: false
+      matrix:
+        # ubuntu-latest only for v1. The atomicWrite path is Windows-specific;
+        # add windows-latest here if Windows CI coverage is wanted before push.
+        os: [ubuntu-latest]
+        node: [22, 24]
+        # declared peer floor + latest stable.
+        playwright: ["1.42.0", "1.60.0"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      # Install from the committed lockfile. npm ci fails loudly on lockfile
+      # drift, which is exactly the reproducibility regression net we want.
+      - name: Install (clean, from lockfile)
+        run: npm ci
+
+      # Per-leg Playwright version override. Safe because @playwright/test is a
+      # peerDependency (not a dependency): selfmend binds to whatever Playwright
+      # resolves in node_modules, so there is no version conflict. --no-save
+      # leaves package.json and the lockfile untouched.
+      - name: Override @playwright/test to matrix version
+        run: npm install --no-save @playwright/test@${{ matrix.playwright }}
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests (vitest)
+        run: npm test
+
+      # Integration suite — INCLUDES tests/offline.spec.ts, the PRIV-01
+      # zero-egress offline proof.
+      - name: Integration tests (Playwright, incl. PRIV-01 offline)
+        run: npm run test:e2e
+
+      - name: Build (tsdown)
+        run: npm run build
+
+      # Publish-surface validation runs ONCE (latest node + latest Playwright)
+      # to cut redundant noise — it is version-independent of the matrix legs.
+      # attw reports an EXPECTED node10 "skull" on the ./reporter subpath
+      # (legacy node10 cannot resolve exports subpaths; engines.node>=22 makes
+      # this irrelevant). Only a non-node10 row regressing is a real failure.
+      - name: Lint package surface (publint)
+        if: matrix.node == 24 && matrix.playwright == '1.60.0'
+        run: npx publint
+
+      - name: Lint type resolution (attw)
+        if: matrix.node == 24 && matrix.playwright == '1.60.0'
+        run: npx @arethetypeswrong/cli --pack
+
+      - name: Pack dry-run (tarball surface)
+        if: matrix.node == 24 && matrix.playwright == '1.60.0'
+        run: npm pack --dry-run
