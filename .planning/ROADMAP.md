@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Thinnest Real Heal** - End-to-end single-worker heal: install, capture, pure-scored match through the trust gates, live rebind, console summary
 - [x] **Phase 2: Trust Hardening** - Multi-signal weighted scoring with hardened confidence floor, second-best margin gate, no-force-green, and a clear audit trail (completed 2026-05-31)
 - [x] **Phase 3: Persistence & Parallel-Worker Safety** - Baseline survives across runs and is corruption-free under Playwright parallel workers (completed 2026-05-31)
-- [ ] **Phase 4: Offline Verification & Publish** - Network-blocked offline proof, dual ESM/CJS packaging, compatibility matrix, first npm release
+- [x] **Phase 4: Offline Verification & Publish** - Network-blocked offline proof, dual ESM/CJS packaging, compatibility matrix, first npm release (completed 2026-05-31)
 
 ## Phase Details
 
@@ -79,7 +79,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 3 plans
 - [x] 04-01-PLAN.md — Commit lockfile (D-08) + self-validating PRIV-01 offline network-block heal-cycle test (D-03) + NUL-byte/no-network-import guard
 - [x] 04-02-PLAN.md — Publish prep: version 0.1.0 + CHANGELOG + prepublishOnly + no source maps + D-07 README (config ref, trust model, committed-baseline, limitations)
-- [ ] 04-03-PLAN.md — Matrix CI (node 22/24 x PW 1.42/1.60, manual release) + green npm publish --dry-run terminal proof + RELEASING checklist
+- [x] 04-03-PLAN.md — Matrix CI (node 22/24 x PW 1.42/1.60, manual release) + green npm publish --dry-run terminal proof + RELEASING checklist
 
 ## Progress
 
@@ -91,4 +91,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Thinnest Real Heal | 5/5 | Complete | 2026-05-31 |
 | 2. Trust Hardening | 2/2 | Complete   | 2026-05-31 |
 | 3. Persistence & Parallel-Worker Safety | 3/3 | Complete   | 2026-05-31 |
-| 4. Offline Verification & Publish | 2/3 | In Progress|  |
+| 4. Offline Verification & Publish | 3/3 | Complete | 2026-05-31 |

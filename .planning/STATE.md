@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Phase 4 context gathered
-last_updated: "2026-05-31T21:00:04.207Z"
+status: complete
+stopped_at: Phase 4 complete — v1.0 milestone done, package publish-ready
+last_updated: "2026-05-31T21:10:00.000Z"
 last_activity: 2026-05-31
 progress:
   total_phases: 4
@@ -25,9 +25,9 @@ See: .planning/PROJECT.md (updated 2026-05-31)
 
 ## Current Position
 
-Phase: 04 (Offline Verification & Publish) — EXECUTING
-Plan: 3 of 3
-Status: Ready to execute
+Phase: 04 (Offline Verification & Publish) — COMPLETE
+Plan: 3 of 3 — Complete (phase gate approved 2026-05-31)
+Status: v1.0 milestone complete — all 4 phases done, package publish-ready (irreversible npm publish left to human per RELEASING.md)
 Last activity: 2026-05-31
 
 Progress: [██████████] 100%
@@ -107,6 +107,8 @@ Recent decisions affecting current work:
 - [Phase ?]: 04-02: bumped to 0.1.0 + prepublishOnly (build+publint+attw) guards a manual publish against stale/unbuilt dist (D-01/D-02)
 - [Phase ?]: 04-02: dist ships zero source maps; tsconfig declarationMap/sourceMap force tsdown sourcemap on, so they were removed (inert under tsc --noEmit) to make tsdown sourcemap:false effective (Pitfall 5)
 - [Phase ?]: 04-02: launch README pins the config table to the zod schema defaults (enabled/threshold 0.9/margin 0.05/testIdAttr) + documents SELFMEND_PRUNE, never-false-green trust model, committed-baseline workflow, WR-03/WR-04 limitations (D-07)
+- [Phase ?]: 04-03: matrix CI (node 22/24 x PW 1.42/1.60, no token, no publish step) + green terminal publish dry-run (selfmend@0.1.0, 14-file dist-only tarball) + RELEASING.md; honest-floor rule for the CI-pending 1.42 leg; real npm publish left to the human (D-01/D-06)
+- [Phase 4]: blocking phase gate APPROVED by orchestrator 2026-05-31 — independently verified 125 unit + 23 e2e green, publint/attw clean, pack=14 dist-only files, publish --dry-run=selfmend@0.1.0 (nothing published), CI holds no NPM_TOKEN; v1.0 milestone CLOSED
 
 ### Pending Todos
 
@@ -126,6 +128,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-31T20:58:43.748Z
-Stopped at: Phase 4 context gathered
+Last session: 2026-05-31T21:10:00.000Z
+Stopped at: Phase 4 complete — v1.0 milestone done (gate approved); next human step is the real npm publish per RELEASING.md
 Resume file: None
