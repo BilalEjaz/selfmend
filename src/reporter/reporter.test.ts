@@ -293,30 +293,53 @@ describe("SelfmendReporter could-not-heal section (REP-02, D-04)", () => {
 });
 
 describe("isComplete completeness predicate (D-09, Open Q2/A3)", () => {
-  it("is TRUE for the default match-all run (grep /.*/ , null grepInvert, null shard)", () => {
-    expect(isComplete(cfg({ grep: /.*/ }))).toBe(true);
+  // A clean argv (no PW narrowing flags) so the predicate reflects ONLY the
+  // FullConfig stub, runner-free and deterministic.
+  const CLEAN_ARGV = ["node", "playwright", "test"];
+
+  it("is TRUE for the default match-all run (match-all grep, null grepInvert, null shard)", () => {
+    expect(isComplete(cfg({ grep: /.*/ }), CLEAN_ARGV)).toBe(true);
   });
 
-  it("handles BOTH the /.*/ RegExp and an empty-array grep default (Open Q2/A3)", () => {
-    // The 1.60 default is /.*/, but the predicate must be robust to either
-    // representation so completeness detection does not silently break.
-    expect(isComplete(cfg({ grep: [] }))).toBe(true);
-    expect(isComplete(cfg({ grep: [/.*/] }))).toBe(true);
+  it("handles BOTH the match-all RegExp and an empty-array grep default (Open Q2/A3)", () => {
+    // The 1.60 default is the match-all RegExp, but the predicate must be robust
+    // to either representation so completeness detection does not silently break.
+    expect(isComplete(cfg({ grep: [] }), CLEAN_ARGV)).toBe(true);
+    expect(isComplete(cfg({ grep: [/.*/] }), CLEAN_ARGV)).toBe(true);
   });
 
-  it("is FALSE when --grep narrows the run", () => {
-    expect(isComplete(cfg({ grep: /@smoke/ }))).toBe(false);
-    expect(isComplete(cfg({ grep: [/@smoke/] }))).toBe(false);
+  it("is FALSE when the FullConfig grep is a concrete pattern", () => {
+    expect(isComplete(cfg({ grep: /@smoke/ }), CLEAN_ARGV)).toBe(false);
+    expect(isComplete(cfg({ grep: [/@smoke/] }), CLEAN_ARGV)).toBe(false);
   });
 
-  it("is FALSE when grepInvert is set (--grep-invert)", () => {
-    expect(isComplete(cfg({ grep: /.*/, grepInvert: /@slow/ }))).toBe(false);
-  });
-
-  it("is FALSE when shard is set (--shard)", () => {
-    expect(isComplete(cfg({ grep: /.*/, shard: { total: 2, current: 1 } }))).toBe(
+  it("is FALSE when grepInvert is set", () => {
+    expect(isComplete(cfg({ grep: /.*/, grepInvert: /@slow/ }), CLEAN_ARGV)).toBe(
       false,
     );
+  });
+
+  it("is FALSE when shard is set", () => {
+    expect(
+      isComplete(cfg({ grep: /.*/, shard: { total: 2, current: 1 } }), CLEAN_ARGV),
+    ).toBe(false);
+  });
+
+  it("is FALSE when a CLI --grep narrows the run even though FullConfig.grep stays match-all (Open Q2/A1, empirical)", () => {
+    // In 1.60 a CLI `--grep` does NOT mutate FullConfig.grep, so argv is the
+    // only reliable signal. This is the case that protects D-09 / Pitfall 2.
+    expect(
+      isComplete(cfg({ grep: /.*/ }), ["node", "pw", "test", "--grep", "@one"]),
+    ).toBe(false);
+    expect(
+      isComplete(cfg({ grep: /.*/ }), ["node", "pw", "test", "--grep=@one"]),
+    ).toBe(false);
+    expect(
+      isComplete(cfg({ grep: /.*/ }), ["node", "pw", "test", "--shard", "1/2"]),
+    ).toBe(false);
+    expect(
+      isComplete(cfg({ grep: /.*/ }), ["node", "pw", "test", "--project", "ci"]),
+    ).toBe(false);
   });
 });
 

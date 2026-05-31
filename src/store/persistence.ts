@@ -184,6 +184,11 @@ export async function atomicWrite(
   const maxAttempts = options.maxAttempts ?? 10;
   const backoffMs = options.backoffMs ?? 50;
 
+  // Ensure the target directory exists before writing the temp sibling: the
+  // first committed write of a run may land in a store dir no worker created
+  // (e.g. a complete run that captured nothing, or a fresh SELFMEND_STORE_DIR).
+  await mkdir(path.dirname(target), { recursive: true });
+
   const tmp = `${target}.${process.pid}.${Date.now()}.${Math.random()
     .toString(36)
     .slice(2)}.tmp`;

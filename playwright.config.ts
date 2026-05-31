@@ -6,7 +6,10 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "tests",
   // Pure-logic unit tests live in Vitest; keep them out of the Playwright runner.
-  testIgnore: ["**/*.unit.test.ts"],
+  // The INNER integration specs under tests/parallel/ are driven by the
+  // parallel-store / prune driver specs via a child run against
+  // playwright.parallel.config.ts, so the default suite must NOT pick them up.
+  testIgnore: ["**/*.unit.test.ts", "parallel/**"],
   workers: 1,
   fullyParallel: false,
   // selfmend's summary-only reporter (REP-01) runs alongside the list reporter:

@@ -436,22 +436,59 @@ function isMatchAllGrep(grep: RegExp | RegExp[]): boolean {
 }
 
 /**
- * The run-completeness predicate (D-09). A run is COMPLETE, and eligible for the
- * destructive prune, only when NO filter narrowed it: `grep` is match-all,
- * `grepInvert` is null, and `shard` is null. Any `--grep`, `--grep-invert`, or
- * `--shard` makes the run partial, so prune must be skipped (Pitfall 2).
- * Exported for unit-testing the gate without a runner.
+ * CLI args that NARROW a run (Open Q2/A1, empirically confirmed against 1.60).
  *
- * Reads only the three filter fields off {@link FullConfig}, so a structurally
- * minimal stub suffices in tests.
+ * EMPIRICAL FINDING (SELFMEND_DEBUG): in Playwright 1.60 the CLI `--grep`,
+ * `--shard`, single-file, `--last-failed`, and `--only-changed` filters are
+ * applied as a SEPARATE filter layer and are NOT reflected in
+ * `FullConfig.grep`/`grepInvert`/`shard` (those keep their config/default
+ * values). So FullConfig alone CANNOT see a CLI `--grep` run. The reporter runs
+ * in the main process, so the run's own argv is the reliable signal: any of
+ * these flags means the run is partial and must NOT prune (D-09 / Pitfall 2).
+ */
+const NARROWING_CLI_FLAGS = [
+  "--grep",
+  "-g",
+  "--grep-invert",
+  "--shard",
+  "--last-failed",
+  "--only-changed",
+  "--project", // a project filter narrows the planned suite too (A2)
+];
+
+/** True if the run's argv carries any run-narrowing filter flag. */
+function argvNarrowsRun(argv: readonly string[]): boolean {
+  return argv.some(
+    (a) =>
+      NARROWING_CLI_FLAGS.includes(a) ||
+      // `--grep=foo` / `--shard=1/2` long-form with an inline value.
+      NARROWING_CLI_FLAGS.some((flag) => a.startsWith(`${flag}=`)),
+  );
+}
+
+/**
+ * The run-completeness predicate (D-09). A run is COMPLETE, and eligible for the
+ * destructive prune, only when NO filter narrowed it. This requires BOTH:
+ *  - the FullConfig filters are unset (`grep` match-all, null `grepInvert`, null
+ *    `shard`) — catches config-file-level filtering; AND
+ *  - the run's `argv` carries no narrowing CLI flag — catches CLI `--grep`/
+ *    `--shard`/`--project`/`--last-failed`/`--only-changed`, which 1.60 does
+ *    NOT surface on FullConfig (the empirical Open Q2/A1 finding).
+ *
+ * `argv` defaults to `process.argv` (the reporter is in the main process); it is
+ * a parameter so the gate can be unit-tested without a runner. Conservative by
+ * design: an undetectable narrowing at worst leaves stale entries (the file
+ * grows slowly), never wrongly deletes a valid baseline. Exported for testing.
  */
 export function isComplete(
   config: Pick<FullConfig, "grep" | "grepInvert" | "shard">,
+  argv: readonly string[] = process.argv,
 ): boolean {
   return (
     isMatchAllGrep(config.grep) &&
     config.grepInvert === null &&
-    config.shard === null
+    config.shard === null &&
+    !argvNarrowsRun(argv)
   );
 }
 

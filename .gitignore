@@ -1,8 +1,24 @@
 node_modules/
 dist/
 coverage/
-.selfmend/
 .selfheal/
+
+# selfmend store (D-01 / D-12): in a CONSUMING project the merged baseline.json
+# is COMMITTED so heals persist across runs and are diffable in review, while the
+# transient per-worker shards and atomic-write temp files are NOT committed.
+# Ignore the root store dir but re-include the single committed baseline file,
+# and keep shards + *.tmp ignored.
+/.selfmend/*
+!/.selfmend/baseline.json
+/.selfmend/shards/
+/.selfmend/*.tmp
+
+# This repo's own e2e run writes a fixture-app store under tests/.selfmend and
+# integration drivers use throwaway .tmp-store-* dirs; both are transient test
+# output, NOT the committed contract artifact. Ignore them entirely.
+tests/.selfmend/
+.tmp-store-*/
+**/.tmp-store-*/
 
 # Playwright
 test-results/
