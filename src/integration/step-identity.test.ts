@@ -25,6 +25,7 @@ class RecordingStore extends BaselineStore {
 const config: SelfmendConfig = {
   enabled: true,
   threshold: 0.9,
+  margin: 0.05,
   testIdAttr: "data-testid",
 };
 

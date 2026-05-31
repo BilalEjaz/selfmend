@@ -10,6 +10,21 @@ import { z } from "zod";
  */
 export const DEFAULT_THRESHOLD = 0.9;
 
+/**
+ * Conservative default second-best margin gate (D-01, MATCH-03).
+ *
+ * The margin is the ABSOLUTE gap (same 0..1 score units as `threshold`) the top
+ * candidate must beat the runner-up by before a heal is accepted; two
+ * look-alike candidates within `margin` of each other are refused as ambiguous
+ * rather than guessed at. `0.05` sits at the midpoint of the headroom above the
+ * 0.9 floor: large enough to refuse genuine duplicates, small enough that a
+ * sole survivor that beats structural also-rans still heals.
+ *
+ * Posture (same warning the threshold carries): RAISING the margin is safer
+ * (refuses more); LOWERING it trades safety for green-ness. Global only (D-07).
+ */
+export const DEFAULT_MARGIN = 0.05;
+
 /** Default attribute used to read a test-id signal from elements. */
 export const DEFAULT_TEST_ID_ATTR = "data-testid";
 
@@ -18,6 +33,12 @@ const thresholdSchema = z
   .number({ message: "threshold must be a number" })
   .min(0, { message: "threshold must be >= 0" })
   .max(1, { message: "threshold must be <= 1" });
+
+/** Inclusive margin bounds: the second-best gap is in the same [0, 1] units. */
+const marginSchema = z
+  .number({ message: "margin must be a number" })
+  .min(0, { message: "margin must be >= 0" })
+  .max(1, { message: "margin must be <= 1" });
 
 /**
  * The single source of truth for `selfmend` plugin configuration.
@@ -33,6 +54,11 @@ export const configSchema = z.object({
     .default(true),
   /** D-09: conservative heal-confidence floor in [0, 1]. */
   threshold: thresholdSchema.default(DEFAULT_THRESHOLD),
+  /**
+   * D-01/D-07: global second-best margin gate in [0, 1]. The top candidate must
+   * beat the runner-up by at least this absolute gap to heal (MATCH-03).
+   */
+  margin: marginSchema.default(DEFAULT_MARGIN),
   /** Attribute name read for the test-id fingerprint signal. */
   testIdAttr: z
     .string({ message: "testIdAttr must be a string" })
