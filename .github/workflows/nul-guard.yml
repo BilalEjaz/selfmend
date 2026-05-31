@@ -1,0 +1,67 @@
+name: nul-guard
+
+# A fast, focused source-integrity gate, kept separate from the main CI matrix.
+# It enforces two invariants on every push / PR:
+#   1. No tracked src/ or tests/ .ts file contains a raw NUL byte
+#      (two Phase 3 incidents shipped NUL-corrupted .ts source as binary).
+#   2. The src/ layer imports NONE of node:http/https/net/dns/tls — the
+#      offline-by-construction guarantee (D-04). Verified zero such imports
+#      today; this guards against a future regression.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fail on NUL bytes in tracked source
+        run: |
+          set -euo pipefail
+          # List tracked .ts files under src/ and tests/, then flag any that
+          # contains a raw NUL byte. We use perl rather than `grep -P '\x00'`
+          # because GNU grep refuses -P under some locales and msys grep refuses
+          # it outright; perl's slurp-mode regex matches a literal NUL portably
+          # on every CI runner. (Two Phase 3 incidents shipped NUL-corrupted .ts
+          # source as binary — this is the guard against a recurrence.)
+          hits=""
+          while IFS= read -r -d '' f; do
+            if perl -0777 -ne 'exit(/\x00/ ? 0 : 1)' "$f"; then
+              hits="${hits}${f}"$'\n'
+            fi
+          done < <(git ls-files -z -- 'src/**/*.ts' 'tests/**/*.ts')
+          if [ -n "$hits" ]; then
+            echo "::error::NUL byte found in tracked source files:"
+            printf '%s' "$hits"
+            exit 1
+          fi
+          echo "OK: no NUL bytes in tracked src/ or tests/ .ts source."
+
+      - name: Fail on a network-module import in src/ (offline-by-construction)
+        run: |
+          set -euo pipefail
+          # Offline guarantee (D-04): the src/ layer must import none of
+          # node:http / node:https / node:net / node:dns / node:tls. Strip
+          # // line comments AND /* ... */ block comments (perl, multiline)
+          # BEFORE matching so this workflow's own prose, a doc-comment, or a
+          # header mentioning the modules cannot self-trip or self-excuse the
+          # gate — only real (uncommented) import/require statements count.
+          offenders=0
+          while IFS= read -r -d '' f; do
+            if perl -0777 -ne '
+                s{/\*.*?\*/}{}gs;        # drop block comments
+                s{//[^\n]*}{}g;          # drop line comments
+                exit(/(?:from|require\(\s*)\s*["'"'"']node:(?:http|https|net|dns|tls)["'"'"']/ ? 0 : 1);
+              ' "$f"; then
+              echo "::error::forbidden node network import in $f"
+              offenders=$((offenders + 1))
+            fi
+          done < <(git ls-files -z -- 'src/**/*.ts')
+          if [ "$offenders" -ne 0 ]; then
+            echo "::error::src/ must be offline-by-construction (D-04): $offenders file(s) import a node network module."
+            exit 1
+          fi
+          echo "OK: src/ imports no node:http/https/net/dns/tls."

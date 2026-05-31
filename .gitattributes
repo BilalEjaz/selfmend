@@ -1,0 +1,18 @@
+# Normalize tracked source as text so accidental binary / NUL-byte corruption
+# surfaces in diffs and is caught by the NUL-guard CI workflow.
+# Two Phase 3 incidents shipped raw NUL bytes in .ts source; this is the guard.
+* text=auto eol=lf
+
+*.ts   text eol=lf
+*.tsx  text eol=lf
+*.js   text eol=lf
+*.mjs  text eol=lf
+*.cjs  text eol=lf
+*.json text eol=lf
+*.md   text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.html text eol=lf
+
+# Lockfiles are text but never hand-edited; keep LF for stable diffs.
+package-lock.json text eol=lf
