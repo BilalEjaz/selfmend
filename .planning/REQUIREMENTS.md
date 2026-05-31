@@ -39,7 +39,7 @@ Requirements for the initial release. v1 is locator healing only.
 
 ### Privacy & Offline
 
-- [ ] **PRIV-01**: The entire healing path runs fully offline, with no network calls, no API key, and no telemetry, verified by a network-blocked test
+- [x] **PRIV-01**: The entire healing path runs fully offline, with no network calls, no API key, and no telemetry, verified by a network-blocked test
 
 ### Configuration
 
@@ -96,7 +96,7 @@ Which phases cover which requirements. Populated during roadmap creation.
 | HEAL-02 | Phase 1 | Complete |
 | REP-01 | Phase 1 | Complete |
 | REP-02 | Phase 2 | Complete |
-| PRIV-01 | Phase 4 | Pending |
+| PRIV-01 | Phase 4 | Complete |
 | CFG-01 | Phase 1 | Complete |
 | CFG-02 | Phase 2 | Complete |
 

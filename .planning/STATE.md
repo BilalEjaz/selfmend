@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Phase 4 context gathered
-last_updated: "2026-05-31T17:03:26.840Z"
-last_activity: 2026-05-31 -- Phase 4 planning complete
+last_updated: "2026-05-31T17:43:54.611Z"
+last_activity: 2026-05-31
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 13
-  completed_plans: 10
+  completed_plans: 11
   percent: 75
 ---
 
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-31)
 
 **Core value:** When a test fails only because a selector changed (not because the app is actually broken), the suite keeps running and tells the team exactly what changed, without any data leaving their CI.
-**Current focus:** Phase 4 — offline verification & publish
+**Current focus:** Phase 04 — Offline Verification & Publish
 
 ## Current Position
 
-Phase: 4
-Plan: Not started
+Phase: 04 (Offline Verification & Publish) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
-Last activity: 2026-05-31 -- Phase 4 planning complete
+Last activity: 2026-05-31
 
-Progress: [██████████] 100%
+Progress: [█████████░] 85%
 
 ## Performance Metrics
 
@@ -64,6 +64,7 @@ Progress: [██████████] 100%
 | Phase 03 P01 | 9 | 3 tasks | 6 files |
 | Phase 03 P02 | 20 | 2 tasks | 8 files |
 | Phase 03 P03 | 33 | 4 tasks | 14 files |
+| Phase 04 P01 | 9 | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -100,6 +101,7 @@ Recent decisions affecting current work:
 - [Phase ?]: [03-03] Merge+prune lives in the Reporter onEnd (not globalTeardown): only the reporter holds both the post-filter planned Suite (onBegin) and FullResult.status (onEnd) to gate the destructive prune (D-09)
 - [Phase ?]: [03-03] isComplete inspects BOTH FullConfig AND process.argv: PW 1.60 leaves FullConfig.grep at /.*/ for a CLI --grep run, so argv narrowing-flag detection closes the gap that would wrongly prune a filtered run (Open Q2/A1 resolved)
 - [Phase ?]: [03-03] Workers load baseline read-only at setup and flush parallelIndex shards at teardown; the reporter is the single atomic-merge writer; destructive prune gated behind SELFMEND_PRUNE + complete-run + passed, refresh-on-pass always runs (D-08)
+- [Phase ?]: [04-01]: PRIV-01 proven mechanically by a per-test throw-on-egress block + self-validation trip (egress counter === 0 across a real green heal); blanket throw is browser-safe (CDP is a stdio pipe); committed reproducible lockfile (D-08); NUL+no-network-import CI guard via portable perl
 
 ### Pending Todos
 
@@ -119,6 +121,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-31T16:40:29.034Z
+Last session: 2026-05-31T17:43:22.887Z
 Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-offline-verification-publish/04-CONTEXT.md
+Resume file: None
