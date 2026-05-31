@@ -105,16 +105,34 @@ function isTimeoutError(err: unknown): boolean {
 }
 
 /**
- * If the last positional argument is an options object, return a shallow clone
- * with `timeout` overridden; otherwise append a fresh `{ timeout }`. Used to
- * cap the REPLAY only (the real attempt is left untouched).
+ * True only for a PLAIN options object — an object literal (`{ ... }`) or a
+ * null-prototype bag. Class instances (a Playwright `Locator`, `ElementHandle`,
+ * `RegExp`, `Date`, ...) and arrays are explicitly excluded: a trailing
+ * `Locator` (e.g. `dragTo(target)`) must NOT be mistaken for an options bag and
+ * shallow-spread into a junk object (WR-04).
  */
-function withTimeout(args: unknown[], timeout: number): unknown[] {
+function isPlainOptions(value: unknown): value is Record<string, unknown> {
+  if (typeof value !== "object" || value === null) return false;
+  if (Array.isArray(value)) return false;
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
+}
+
+/**
+ * If the last positional argument is a PLAIN options object, return a shallow
+ * clone with `timeout` overridden; otherwise append a fresh `{ timeout }`. Used
+ * to cap the REPLAY only (the real attempt is left untouched).
+ *
+ * Non-plain final args (a `Locator` target for `dragTo`, an array of values for
+ * `selectOption`, a string for `fill`/`press`) pass through untouched and the
+ * options bag is appended after them.
+ *
+ * Exported for unit testing (WR-04).
+ */
+export function withTimeout(args: unknown[], timeout: number): unknown[] {
   const last = args[args.length - 1];
-  const isOpts =
-    typeof last === "object" && last !== null && !Array.isArray(last);
-  if (isOpts) {
-    return [...args.slice(0, -1), { ...(last as object), timeout }];
+  if (isPlainOptions(last)) {
+    return [...args.slice(0, -1), { ...last, timeout }];
   }
   return [...args, { timeout }];
 }
