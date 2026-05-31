@@ -143,7 +143,7 @@ describe("atomicWrite + loadBaseline round-trip (CAP-02)", () => {
     expect(await readFile(bp, "utf8")).toBe(data);
     // No temp sibling left behind.
     const siblings = await readdir(path.dirname(bp));
-    expect(siblings.some((f) => f.includes(".tmp"))).toBe(false);
+    expect(siblings.some((f: string) => f.includes(".tmp"))).toBe(false);
   });
 
   it("a store written via atomicWrite reloads via loadBaseline with fingerprints intact", async () => {
@@ -151,9 +151,9 @@ describe("atomicWrite + loadBaseline round-trip (CAP-02)", () => {
     const { serialize } = await import("./serialize.js");
     const key = "spec.ts t > case page.locator(button) 0";
     const baseline = {
-      version: STORE_FORMAT_VERSION,
+      version: STORE_FORMAT_VERSION as typeof STORE_FORMAT_VERSION,
       entries: { [key]: fp() },
-    };
+    } satisfies import("./schema.js").BaselineFile;
     const bp = baselinePath(root);
     await mkdir(path.dirname(bp), { recursive: true });
     await atomicWrite(bp, serialize(baseline));
@@ -212,7 +212,7 @@ describe("atomicWrite Windows retry path (Pitfall 1)", () => {
     expect(attempts).toBe(3);
     expect(await readFile(bp, "utf8")).toBe(data);
     const siblings = await readdir(path.dirname(bp));
-    expect(siblings.some((f) => f.includes(".tmp"))).toBe(false);
+    expect(siblings.some((f: string) => f.includes(".tmp"))).toBe(false);
   });
 
   it("on EXHAUSTED retries removes the temp file and rethrows (no half-written target)", async () => {
@@ -236,7 +236,7 @@ describe("atomicWrite Windows retry path (Pitfall 1)", () => {
 
     // Target never created; no temp left behind.
     const siblings = await readdir(path.dirname(bp));
-    expect(siblings.some((f) => f.includes(".tmp"))).toBe(false);
+    expect(siblings.some((f: string) => f.includes(".tmp"))).toBe(false);
     expect(siblings.includes("baseline.json")).toBe(false);
   });
 });
