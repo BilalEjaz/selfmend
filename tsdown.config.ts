@@ -11,6 +11,10 @@ export default defineConfig({
   entry: { index: "src/index.ts", reporter: "src/reporter/reporter.ts" },
   format: ["esm", "cjs"],
   dts: true,
+  // Publish build emits NO source maps: `files:[dist]` ships only `dist/`, so a
+  // `.map` referencing un-shipped `src/` is dead weight (~130 kB) and a minor
+  // source-path leak. publint/attw/pack stay green without them (Pitfall 5).
+  sourcemap: false,
   clean: true,
   outDir: "dist",
   target: "node22",

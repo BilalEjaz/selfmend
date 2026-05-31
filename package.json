@@ -1,6 +1,6 @@
 {
   "name": "selfmend",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Self-healing Playwright locators that run fully offline inside your own CI — no API key, no telemetry, no false-green tests.",
   "license": "MIT",
   "type": "module",
@@ -44,7 +44,8 @@
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit",
     "lint:pack": "publint",
-    "lint:types": "attw --pack"
+    "lint:types": "attw --pack",
+    "prepublishOnly": "npm run build && npm run lint:pack && npm run lint:types"
   },
   "peerDependencies": {
     "@playwright/test": ">=1.42"
