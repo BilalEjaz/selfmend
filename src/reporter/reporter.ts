@@ -285,13 +285,12 @@ function formatScore(score: number): string {
 }
 
 // eslint-disable-next-line no-control-regex
-const ANSI = /\[[0-9;]*m/g;
+const ANSI = /\x1b\[[0-9;]*m/g;
 
 /** Strip ANSI color codes so we can measure true visible width. */
-function stripAnsi(s: string): string {
+export function stripAnsi(s: string): string {
   return s.replace(ANSI, "");
 }
-// (ANSI defined above with an explicit ESC byte; see top of file.)
 
 /** Visible (color-stripped) length of a line, for box sizing. */
 function visibleLength(s: string): number {

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import pc from "picocolors";
 
-import SelfmendReporter from "./reporter.js";
+import SelfmendReporter, { stripAnsi } from "./reporter.js";
 import {
   HEAL_ATTACHMENT_NAME,
   type HealEvent,
@@ -52,6 +52,26 @@ const ANSI_ALL = /\x1b\[[0-9;]*m/g;
 function visible(s: string): string {
   return s.replace(ANSI_ALL, "");
 }
+
+describe("stripAnsi removes the full escape sequence incl. ESC byte (MD-01)", () => {
+  it("leaves no stray ESC byte and yields the true visible string", () => {
+    const colored = pc.createColors(true);
+    const s = colored.red("x") + colored.green("yz");
+    const plain = stripAnsi(s);
+    // The full ANSI sequence (incl. the leading \x1b ESC byte) is gone — no
+    // stray control byte over-counts the visible width.
+    expect(plain).not.toMatch(/\x1b/); // eslint-disable-line no-control-regex
+    expect(plain).toBe("xyz");
+  });
+
+  it("matches the reference width stripper so the symmetry assumption is gone", () => {
+    const colored = pc.createColors(true);
+    const s = colored.red("red-selector");
+    // The reporter's own stripper and the test's reference stripper must agree.
+    expect(stripAnsi(s)).toBe(visible(s));
+    expect(stripAnsi(s).length).toBe("red-selector".length);
+  });
+});
 
 describe("SelfmendReporter box alignment with color enabled (WR-02)", () => {
   it("keeps the box aligned when content is colored (full ANSI incl. ESC stripped for width)", () => {
