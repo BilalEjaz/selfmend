@@ -48,7 +48,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. When neither gate is cleared (no candidate, below floor, or ambiguous), the plugin does not heal and the locator fails normally with a loud "could not heal" message (no false greens)
   4. The console summary clearly distinguishes healed locators from failed-to-heal ones, showing confidence and runner-up margin per heal
   5. User can configure the confidence floor and the margin gate via plugin config
-**Plans**: TBD
+**Plans**: 2 plans
+- [ ] 02-01-PLAN.md — Pure core + config: margin gate in decide(), bestScore on no-heal, weight ordering invariant, margin config key (TDD; MATCH-02, MATCH-03, CFG-02)
+- [ ] 02-02-PLAN.md — Refused-heal slice: SelfmendEvent tagged union, proxy attach-then-rethrow, reporter could-not-heal section, ambiguous-duplicate Playwright proof (MATCH-04, REP-02)
 
 ### Phase 3: Persistence & Parallel-Worker Safety
 **Goal**: The baseline store survives across runs and stays corruption-free when Playwright runs tests across parallel workers.
