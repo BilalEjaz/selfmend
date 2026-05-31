@@ -76,7 +76,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. The package installs and imports correctly in both a real ESM project and a real CJS project, validated by publint and attw
   3. A Playwright-version matrix (lowest and highest declared supported minors) passes the heal integration tests
   4. The package is published to npm under MIT with a README documenting zero-friction install
-**Plans**: TBD
+**Plans**: 3 plans
+- [ ] 04-01-PLAN.md — Commit lockfile (D-08) + self-validating PRIV-01 offline network-block heal-cycle test (D-03) + NUL-byte/no-network-import guard
+- [ ] 04-02-PLAN.md — Publish prep: version 0.1.0 + CHANGELOG + prepublishOnly + no source maps + D-07 README (config ref, trust model, committed-baseline, limitations)
+- [ ] 04-03-PLAN.md — Matrix CI (node 22/24 x PW 1.42/1.60, manual release) + green npm publish --dry-run terminal proof + RELEASING checklist
 
 ## Progress
 
@@ -88,4 +91,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Thinnest Real Heal | 5/5 | Complete | 2026-05-31 |
 | 2. Trust Hardening | 2/2 | Complete   | 2026-05-31 |
 | 3. Persistence & Parallel-Worker Safety | 3/3 | Complete   | 2026-05-31 |
-| 4. Offline Verification & Publish | 0/TBD | Not started | - |
+| 4. Offline Verification & Publish | 0/3 | Not started | - |
