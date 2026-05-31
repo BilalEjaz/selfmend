@@ -34,7 +34,7 @@ Requirements for the initial release. v1 is locator healing only.
 
 ### Reporting
 
-- [ ] **REP-01**: At end of run, the plugin prints a console summary of every heal: original selector, healed target, confidence score, and margin
+- [x] **REP-01**: At end of run, the plugin prints a console summary of every heal: original selector, healed target, confidence score, and margin
 - [ ] **REP-02**: The summary clearly distinguishes healed locators from failed-to-heal ones, giving the team a visible audit trail
 
 ### Privacy & Offline
@@ -94,7 +94,7 @@ Which phases cover which requirements. Populated during roadmap creation.
 | MATCH-04 | Phase 2 | Pending |
 | HEAL-01 | Phase 1 | Complete |
 | HEAL-02 | Phase 1 | Complete |
-| REP-01 | Phase 1 | Pending |
+| REP-01 | Phase 1 | Complete |
 | REP-02 | Phase 2 | Pending |
 | PRIV-01 | Phase 4 | Pending |
 | CFG-01 | Phase 1 | Complete |
@@ -107,4 +107,4 @@ Which phases cover which requirements. Populated during roadmap creation.
 
 ---
 *Requirements defined: 2026-05-31*
-*Last updated: 2026-05-31 after roadmap creation (phase mappings populated)*
+*Last updated: 2026-05-31 after 01-05 — REP-01 complete; Phase 1 requirements (INST-01/02, CAP-01, MATCH-01, HEAL-01/02, REP-01, CFG-01) all done*

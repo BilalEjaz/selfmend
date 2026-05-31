@@ -12,7 +12,7 @@ This roadmap delivers an offline, MIT-licensed, Playwright-native self-healing l
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Thinnest Real Heal** - End-to-end single-worker heal: install, capture, pure-scored match through the trust gates, live rebind, console summary
+- [x] **Phase 1: Thinnest Real Heal** - End-to-end single-worker heal: install, capture, pure-scored match through the trust gates, live rebind, console summary
 - [ ] **Phase 2: Trust Hardening** - Multi-signal weighted scoring with hardened confidence floor, second-best margin gate, no-force-green, and a clear audit trail
 - [ ] **Phase 3: Persistence & Parallel-Worker Safety** - Baseline survives across runs and is corruption-free under Playwright parallel workers
 - [ ] **Phase 4: Offline Verification & Publish** - Network-blocked offline proof, dual ESM/CJS packaging, compatibility matrix, first npm release
@@ -35,7 +35,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] 01-02-PLAN.md — Pure Playwright-free scorer + heal-decision with conservative floor (TDD, MATCH-01 core, false-green guard)
 - [x] 01-03-PLAN.md — Throwaway rebind spike: catch TimeoutError + replay, chained-Proxy, bounded timeout budget (de-risk)
 - [x] 01-04-PLAN.md — Live heal loop: in-process store, fingerprint capture, candidate-finder, locator Proxy + page fixture (CAP-01, HEAL-01/02, INST-02)
-- [ ] 01-05-PLAN.md — Summary-only boxed reporter (REP-01) + public import-swap entry + install/report proof (INST-01/02)
+- [x] 01-05-PLAN.md — Summary-only boxed reporter (REP-01) + public import-swap entry + install/report proof (INST-01/02)
 
 ### Phase 2: Trust Hardening
 **Goal**: The matcher becomes trustworthy: multi-signal weighted scoring, both trust gates enforced in the pure core, and a console audit trail that cannot produce a false green.
@@ -80,7 +80,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Thinnest Real Heal | 4/5 | In Progress|  |
+| 1. Thinnest Real Heal | 5/5 | Complete | 2026-05-31 |
 | 2. Trust Hardening | 0/TBD | Not started | - |
 | 3. Persistence & Parallel-Worker Safety | 0/TBD | Not started | - |
 | 4. Offline Verification & Publish | 0/TBD | Not started | - |
