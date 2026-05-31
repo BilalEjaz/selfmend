@@ -210,7 +210,7 @@ export function wrapLocator(
           );
           // Re-wrap with a selector that records the chained refinement, so the
           // baseline key stays distinct from the parent locator's.
-          const chainedSelector = `${selector} >> ${prop}(${describeArgs(args)})`;
+          const chainedSelector = `${selector} >> ${prop}(${describeArgs(args, ctx.nextStep)})`;
           return wrapLocator(next, chainedSelector, ctx);
         };
       }
@@ -224,7 +224,7 @@ export function wrapLocator(
 }
 
 /** Compact, side-effect-free description of chain args for the store key. */
-function describeArgs(args: unknown[]): string {
+export function describeArgs(args: unknown[], nextStep: () => number): string {
   try {
     return args
       .map((a) => (typeof a === "string" ? a : JSON.stringify(a) ?? ""))

@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest";
 import {
   wrapLocator,
   createStepCounter,
+  describeArgs,
   type HealContext,
 } from "./locator-proxy.js";
 import { BaselineStore } from "../store/store.js";
@@ -73,6 +74,36 @@ describe("per-test step disambiguator (CR-01)", () => {
 
     expect(store.keys).toHaveLength(2);
     expect(store.keys[0]).not.toBe(store.keys[1]);
+  });
+
+  it("two DISTINCT non-serializable chain args yield DISTINCT selector tokens (LO-02)", () => {
+    // The footgun (same class as CR-01): JSON.stringify throws on a
+    // circular/non-serializable chain arg and describeArgs USED to collapse it
+    // to "". Two genuinely-different chained refinements then share the SAME
+    // chained-selector string -> the same baseline identity component -> a
+    // heal could be matched against the wrong element's fingerprint. A
+    // distinguishing token per non-serializable arg must keep them apart.
+    const next = createStepCounter();
+
+    const circA: Record<string, unknown> = {};
+    circA.self = circA; // JSON.stringify throws
+    const circB: Record<string, unknown> = {};
+    circB.self = circB; // a DIFFERENT non-serializable value
+
+    const tokenA = describeArgs([circA], next);
+    const tokenB = describeArgs([circB], next);
+
+    // Neither collapses to an empty string...
+    expect(tokenA).not.toBe("");
+    expect(tokenB).not.toBe("");
+    // ...and two distinct non-serializable args do NOT collide.
+    expect(tokenA).not.toBe(tokenB);
+  });
+
+  it("describeArgs stays stable for serializable args (no spurious churn)", () => {
+    const next = createStepCounter();
+    expect(describeArgs(["text"], next)).toBe("text");
+    expect(describeArgs([{ hasText: "Save" }], next)).toBe('{"hasText":"Save"}');
   });
 
   it("a SINGLE wrapped locator reused across capture+heal keeps ONE stable key", () => {
