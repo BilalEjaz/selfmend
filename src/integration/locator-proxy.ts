@@ -7,7 +7,7 @@ import { decide } from "../matching/decision.js";
 import { score } from "../matching/scoring.js";
 import type { ScoredCandidate } from "../matching/types.js";
 import type { BaselineStore } from "../store/store.js";
-import { attachHealEvent } from "./events.js";
+import { attachHealEvent, attachRefusedEvent } from "./events.js";
 
 /**
  * The Locator Proxy heal loop (HEAL-01, HEAL-02, INST-02).
@@ -316,7 +316,35 @@ async function actionOrHeal(
       floor: ctx.config.threshold,
       margin: ctx.config.margin,
     });
-    if (!decision.heal) throw err; // below floor / no candidate -> re-throw original
+    if (!decision.heal) {
+      // Post-scoring refusal (no-candidates / below-floor / ambiguous): record a
+      // refused event for the report (REP-02, D-04), THEN unconditionally
+      // re-throw the ORIGINAL error so the test fails normally (D-06, MATCH-04).
+      // The attach is additive observability and must NEVER suppress the
+      // failure (Pitfall 2): guard the ATTACH, not the throw, so even if the
+      // attach rejects the original error still propagates.
+      // Scope the refused event to the three post-scoring reasons; decide()
+      // never returns `no-fingerprint` (that is the early re-throw above), but
+      // the narrow keeps the wire contract honest and excludes it by type.
+      if (
+        decision.reason === "no-candidates" ||
+        decision.reason === "below-floor" ||
+        decision.reason === "ambiguous"
+      ) {
+        try {
+          await attachRefusedEvent(ctx.testInfo, {
+            kind: "refused",
+            testName: ctx.testInfo.title,
+            originalSelector: selector,
+            reason: decision.reason,
+            bestScore: decision.bestScore,
+          });
+        } catch {
+          // Observability is best-effort; never let a failed attach mask `err`.
+        }
+      }
+      throw err;
+    }
 
     // Rebind = FRESH page.locator(newSelector) (cannot reuse an ElementHandle,
     // issue #10571). Replay the SAME action with a bounded replay budget.
