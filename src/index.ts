@@ -1,8 +1,49 @@
 // Public entry point for the `selfmend` package (import path per D-02).
-// The healing test fixture + reporter are wired in later plans of this phase.
-// For now we export the validated config surface (built test-first in 01-01).
-export {
-  configSchema,
-  type SelfmendConfig,
-} from "./config/schema.js";
+//
+// The one-line import swap (D-03): a consumer changes
+//
+//     import { test, expect } from "@playwright/test";
+// to
+//     import { test, expect } from "selfmend";
+//
+// and every test using this `test` becomes healing-aware — no test rewrites,
+// existing `page`/locator/`expect` usage is unchanged (INST-01/INST-02). This
+// is the package `exports` entry (package.json) for both `import` and `require`.
+
+// `test` = the base @playwright/test test extended with the healing fixture.
+// `healingFixture` IS that extended test object; re-exporting it as `test` makes
+// the import swap a true drop-in. (D-03)
+export { healingFixture as test } from "./integration/fixture.js";
+
+// Composable fixture export (D-04): teams that already maintain their own
+// `test.extend` can merge selfmend's healing into their fixtures instead of
+// adopting the bare re-exported `test`.
+export { healingFixture } from "./integration/fixture.js";
+export type { SelfmendWorkerFixtures } from "./integration/fixture.js";
+
+// `expect` is re-exported unchanged so the swap is truly one line. Assertions
+// are NOT routed through the heal path (action-method partition, plan 04) —
+// `expect` here is exactly @playwright/test's `expect`.
+export { expect } from "@playwright/test";
+
+// The summary-only reporter (REP-01). Consumers add it to their Playwright
+// config's `reporter` list (see README) to get the end-of-run boxed heal
+// summary. Exposed as a NAMED export only — a mixed default+named entry forces
+// CJS consumers onto `.default`, so we keep the entry named-only for clean
+// `import`/`require` ergonomics. Playwright's reporter list resolves the class
+// via the package subpath `"selfmend/reporter"` (see package.json exports).
+export { default as SelfmendReporter } from "./reporter/reporter.js";
+
+// Config surface (CFG-01): the validated schema, its resolved type, and the
+// on-by-default defaults (D-08/D-09). `SelfmendConfig` is the type a consumer
+// uses with `test.use({ selfmendConfig })`.
+export { configSchema, type SelfmendConfig } from "./config/schema.js";
 export { defaultConfig } from "./config/defaults.js";
+
+// Heal-event transport shape, for consumers building their own reporting on top
+// of the `selfmend-heal` attachments.
+export {
+  HEAL_ATTACHMENT_NAME,
+  type HealEvent,
+  attachHealEvent,
+} from "./integration/events.js";
