@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>selfmend fixture — broken (selector-mutated)</title>
+  </head>
+  <body>
+    <main>
+      <h1>selfmend fixture app</h1>
+
+      <form id="signup-form">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" placeholder="you@example.com" />
+
+        <!--
+          SAME semantic button as index.html, but the PRIMARY selector is mutated:
+            - data-testid renamed: "submit-btn" -> "primary-action"
+            - class changed:       "btn-primary" -> "btn-cta"
+          The healing signals (visible text "Submit", role=button, position in
+          #signup-form, aria-label) are unchanged, so a correct heal IS possible.
+          A locator pinned to [data-testid="submit-btn"] / .btn-primary will break
+          and must be healed to this element.
+        -->
+        <button
+          type="submit"
+          data-testid="primary-action"
+          class="btn btn-cta"
+          role="button"
+          aria-label="Submit the signup form"
+        >
+          Submit
+        </button>
+      </form>
+
+      <!--
+        Control element is INTENTIONALLY ABSENT here (present in index.html).
+        A locator for [data-testid="control-only"] has no correct heal target;
+        healing it would be a false green. This is the negative regression net.
+      -->
+
+      <p id="status" data-testid="status">idle</p>
+    </main>
+  </body>
+</html>

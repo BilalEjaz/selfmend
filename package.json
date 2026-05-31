@@ -1,0 +1,49 @@
+{
+  "name": "selfmend",
+  "version": "0.0.0",
+  "description": "Self-healing Playwright locators that run fully offline inside your own CI — no API key, no telemetry, no false-green tests.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsdown",
+    "test": "vitest run src",
+    "test:watch": "vitest src",
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --noEmit",
+    "lint:pack": "publint",
+    "lint:types": "attw --pack"
+  },
+  "peerDependencies": {
+    "@playwright/test": ">=1.42"
+  },
+  "dependencies": {
+    "picocolors": "^1",
+    "zod": "^4"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18",
+    "@playwright/test": "^1.60",
+    "publint": "^0.3",
+    "tsdown": "^0.22",
+    "typescript": "^6",
+    "vitest": "^4"
+  }
+}

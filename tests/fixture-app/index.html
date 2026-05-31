@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>selfmend fixture — baseline</title>
+  </head>
+  <body>
+    <main>
+      <h1>selfmend fixture app</h1>
+
+      <form id="signup-form">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" placeholder="you@example.com" />
+
+        <!--
+          Stable, fingerprintable target element.
+          Identity signals: visible text "Submit", data-testid, ARIA role (button),
+          a stable class, and DOM position inside #signup-form.
+          broken.html keeps the SAME semantic button but mutates its primary selector.
+        -->
+        <button
+          type="submit"
+          data-testid="submit-btn"
+          class="btn btn-primary"
+          role="button"
+          aria-label="Submit the signup form"
+        >
+          Submit
+        </button>
+      </form>
+
+      <!--
+        Control element: genuinely PRESENT here and genuinely ABSENT in broken.html.
+        Used by the no-false-green test in later plans — there is no correct heal
+        target for it, so healing must NOT invent one.
+      -->
+      <button data-testid="control-only" class="btn btn-ghost">Control Only</button>
+
+      <p id="status" data-testid="status">idle</p>
+    </main>
+  </body>
+</html>

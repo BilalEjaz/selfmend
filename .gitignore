@@ -1,0 +1,23 @@
+node_modules/
+dist/
+coverage/
+.selfmend/
+.selfheal/
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+.playwright/
+playwright/.cache/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
