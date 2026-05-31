@@ -436,15 +436,21 @@ function isMatchAllGrep(grep: RegExp | RegExp[]): boolean {
 }
 
 /**
- * CLI args that NARROW a run (Open Q2/A1, empirically confirmed against 1.60).
+ * CLI flags that NARROW a run (Open Q2/A1, empirically confirmed against 1.60).
  *
  * EMPIRICAL FINDING (SELFMEND_DEBUG): in Playwright 1.60 the CLI `--grep`,
- * `--shard`, single-file, `--last-failed`, and `--only-changed` filters are
- * applied as a SEPARATE filter layer and are NOT reflected in
+ * `--shard`, `--last-failed`, and `--only-changed` filters are applied as a
+ * SEPARATE filter layer and are NOT reflected in
  * `FullConfig.grep`/`grepInvert`/`shard` (those keep their config/default
  * values). So FullConfig alone CANNOT see a CLI `--grep` run. The reporter runs
  * in the main process, so the run's own argv is the reliable signal: any of
  * these flags means the run is partial and must NOT prune (D-09 / Pitfall 2).
+ *
+ * A single-file / test-path / title-substring filter is NOT a flag — it is a
+ * BARE POSITIONAL argument (`tests/login.spec.ts`, `tests/login.spec.ts:42`,
+ * `login`). Those are detected separately by {@link argvHasPositionalFilter},
+ * NOT by this flag list (the prior doc comment wrongly claimed "single-file"
+ * was covered here — it was not; see WR-01).
  */
 const NARROWING_CLI_FLAGS = [
   "--grep",
@@ -456,8 +462,66 @@ const NARROWING_CLI_FLAGS = [
   "--project", // a project filter narrows the planned suite too (A2)
 ];
 
-/** True if the run's argv carries any run-narrowing filter flag. */
+/**
+ * Value-taking flags whose NEXT argv token is the flag's value, not a positional
+ * filter. Used by {@link argvHasPositionalFilter} so `--workers 4` does not read
+ * `4` as a path filter. Long-form `--flag=value` carries its own value inline
+ * and never consumes the following token, so it is naturally handled.
+ */
+const VALUE_FLAGS = new Set<string>([
+  "--grep",
+  "-g",
+  "--grep-invert",
+  "--shard",
+  "--project",
+  "--workers",
+  "-j",
+  "--retries",
+  "--reporter",
+  "--config",
+  "-c",
+  "--timeout",
+  "--repeat-each",
+  "--max-failures",
+  "--output",
+  "--trace",
+  "--global-timeout",
+]);
+
+/**
+ * True if argv carries a BARE POSITIONAL argument after the `playwright test`
+ * subcommand — i.e. a test-path/file/line/title-substring filter (WR-01). Such
+ * a token narrows the run exactly like `--grep`, but is not a flag, so the
+ * 1.60 runner applies it as a separate filter layer that FullConfig never
+ * reflects. We skip the runner/script tokens (`node` + the script path, the
+ * first two argv entries), the `test` subcommand, every recognized flag, and
+ * each value-flag's space-separated value. Anything left that does not start
+ * with `-` is a genuine positional selector => the run is narrowed.
+ */
+function argvHasPositionalFilter(argv: readonly string[]): boolean {
+  // Skip argv[0] (node) and argv[1] (the playwright/script path).
+  for (let i = 2; i < argv.length; i++) {
+    const tok = argv[i]!;
+    if (tok.startsWith("-")) {
+      // A `--flag value` consumes the next token as its value; `--flag=value`
+      // is self-contained and consumes nothing.
+      if (VALUE_FLAGS.has(tok)) i++;
+      continue;
+    }
+    if (tok === "test") continue; // the playwright subcommand itself
+    return true; // a bare positional => path/title filter => narrowed
+  }
+  return false;
+}
+
+/**
+ * True if the run's argv carries any run-narrowing signal: a known narrowing
+ * flag (long or `=`-inline form) OR a bare positional test-path/title filter
+ * (WR-01). A positional filter is the single-file case the doc comment used to
+ * claim was covered but was not.
+ */
 function argvNarrowsRun(argv: readonly string[]): boolean {
+  if (argvHasPositionalFilter(argv)) return true;
   return argv.some(
     (a) =>
       NARROWING_CLI_FLAGS.includes(a) ||
