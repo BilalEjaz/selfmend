@@ -22,7 +22,7 @@ Requirements for the initial release. v1 is locator healing only.
 
 ### Matching & Heal Decision
 
-- [ ] **MATCH-01**: When a locator fails to resolve, the plugin enumerates candidate elements and scores each against the stored fingerprint using weighted signals
+- [x] **MATCH-01**: When a locator fails to resolve, the plugin enumerates candidate elements and scores each against the stored fingerprint using weighted signals
 - [ ] **MATCH-02**: A heal is accepted only when the top candidate's score clears an absolute confidence floor
 - [ ] **MATCH-03**: A heal is accepted only when the top candidate beats the second-best candidate by a configurable margin, preventing ambiguous matches
 - [ ] **MATCH-04**: When no candidate clears both gates, the plugin does not heal and the locator fails normally (no false greens)
@@ -88,7 +88,7 @@ Which phases cover which requirements. Populated during roadmap creation.
 | CAP-01 | Phase 1 | Pending |
 | CAP-02 | Phase 3 | Pending |
 | CAP-03 | Phase 3 | Pending |
-| MATCH-01 | Phase 1 | Pending |
+| MATCH-01 | Phase 1 | Complete |
 | MATCH-02 | Phase 2 | Pending |
 | MATCH-03 | Phase 2 | Pending |
 | MATCH-04 | Phase 2 | Pending |

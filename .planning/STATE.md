@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 1 context gathered
-last_updated: "2026-05-31T01:27:13.942Z"
+stopped_at: Completed 01-02-PLAN.md
+last_updated: "2026-05-31T01:33:53.249Z"
 last_activity: 2026-05-31
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 5
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-05-31)
 ## Current Position
 
 Phase: 01 (Thinnest Real Heal) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Ready to execute
 Last activity: 2026-05-31
 
-Progress: [██░░░░░░░░] 20%
+Progress: [████░░░░░░] 40%
 
 ## Performance Metrics
 
@@ -53,6 +53,7 @@ Progress: [██░░░░░░░░] 20%
 
 *Updated after each plan completion*
 | Phase 01 P01 | 3 | 2 tasks | 12 files |
+| Phase 01 P02 | 4 | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -66,6 +67,8 @@ Recent decisions affecting current work:
 - [Roadmap]: The live locator-rebind hook is the riskiest unknown and is de-risked inside Phase 1 (research likely needed) before the integration design is deepened.
 - [Phase ?]: [01-01]: selfmend config on-by-default (enabled:true, D-08) + conservative 0.9 threshold (D-09); defaults derived from the zod schema so they cannot drift
 - [Phase ?]: [01-01]: dual-package exports use per-format type conditions (.d.mts/.d.cts) matching tsdown output; verified with publint + attw
+- [Phase ?]: [01-02]: matching core is pure (Playwright/fs-free), deterministic, TDD-built; false-green guard lives in decide() via a conservative inclusive floor
+- [Phase ?]: [01-02]: scorer skips signals absent on both sides so missing signals never dilute to 0; HealEvent retains runner-up score so the Phase 2 margin gate needs no contract change
 
 ### Pending Todos
 
@@ -85,6 +88,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-31T01:26:49.445Z
-Stopped at: Phase 1 context gathered
+Last session: 2026-05-31T01:33:53.242Z
+Stopped at: Completed 01-02-PLAN.md
 Resume file: None

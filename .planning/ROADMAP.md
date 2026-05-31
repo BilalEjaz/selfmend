@@ -32,7 +32,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   5. User can toggle healing on or off via plugin config
 **Plans**: 5 plans
 - [x] 01-01-PLAN.md — Package skeleton (dual ESM/CJS, peer dep), test-first config (CFG-01), framework configs + offline HTML fixture
-- [ ] 01-02-PLAN.md — Pure Playwright-free scorer + heal-decision with conservative floor (TDD, MATCH-01 core, false-green guard)
+- [x] 01-02-PLAN.md — Pure Playwright-free scorer + heal-decision with conservative floor (TDD, MATCH-01 core, false-green guard)
 - [ ] 01-03-PLAN.md — Throwaway rebind spike: catch TimeoutError + replay, chained-Proxy, bounded timeout budget (de-risk)
 - [ ] 01-04-PLAN.md — Live heal loop: in-process store, fingerprint capture, candidate-finder, locator Proxy + page fixture (CAP-01, HEAL-01/02, INST-02)
 - [ ] 01-05-PLAN.md — Summary-only boxed reporter (REP-01) + public import-swap entry + install/report proof (INST-01/02)
@@ -80,7 +80,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Thinnest Real Heal | 1/5 | In Progress|  |
+| 1. Thinnest Real Heal | 2/5 | In Progress|  |
 | 2. Trust Hardening | 0/TBD | Not started | - |
 | 3. Persistence & Parallel-Worker Safety | 0/TBD | Not started | - |
 | 4. Offline Verification & Publish | 0/TBD | Not started | - |
