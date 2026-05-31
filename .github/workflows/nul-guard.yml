@@ -49,12 +49,17 @@ jobs:
           # BEFORE matching so this workflow's own prose, a doc-comment, or a
           # header mentioning the modules cannot self-trip or self-excuse the
           # gate — only real (uncommented) import/require statements count.
+          # IN-03: match three reach-the-network forms — static `from "..."`,
+          # `require("...")`, AND dynamic `import("...")` — and accept BOTH the
+          # `node:`-prefixed specifier and the bare `"net"`/`"http"`/... form
+          # (Node resolves both), so neither a dynamic import nor a bare
+          # specifier is an escape hatch from the offline-by-construction gate.
           offenders=0
           while IFS= read -r -d '' f; do
             if perl -0777 -ne '
                 s{/\*.*?\*/}{}gs;        # drop block comments
                 s{//[^\n]*}{}g;          # drop line comments
-                exit(/(?:from|require\(\s*)\s*["'"'"']node:(?:http|https|net|dns|tls)["'"'"']/ ? 0 : 1);
+                exit(/(?:from|require\(\s*|import\(\s*)\s*["'"'"'](?:node:)?(?:http|https|net|dns|tls|http2)["'"'"']/ ? 0 : 1);
               ' "$f"; then
               echo "::error::forbidden node network import in $f"
               offenders=$((offenders + 1))

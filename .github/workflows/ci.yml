@@ -55,6 +55,17 @@ jobs:
       - name: Override @playwright/test to matrix version
         run: npm install --no-save @playwright/test@${{ matrix.playwright }}
 
+      # IN-01: PROVE the floor override actually took. Without this, npm's flat
+      # hoisting / peer dedupe could silently keep 1.60 on the 1.42.0 leg, so
+      # the matrix would prove 1.60 twice and the declared >=1.42 floor would be
+      # unproven while appearing green. Assert the resolved version equals the
+      # matrix version so the floor leg genuinely exercises 1.42.0.
+      - name: Assert resolved @playwright/test version
+        run: |
+          RESOLVED=$(node -p "require('@playwright/test/package.json').version")
+          echo "resolved @playwright/test=$RESOLVED expected=${{ matrix.playwright }}"
+          test "$RESOLVED" = "${{ matrix.playwright }}"
+
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
