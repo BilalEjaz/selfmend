@@ -10,5 +10,7 @@ export default defineConfig({
   outDir: "dist",
   target: "node22",
   // @playwright/test is a peerDependency — never bundle it (T-01-03).
-  external: ["@playwright/test"],
+  deps: {
+    neverBundle: ["@playwright/test"],
+  },
 });
