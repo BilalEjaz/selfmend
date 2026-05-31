@@ -119,4 +119,17 @@ export class BaselineStore {
       seen: [...this.seen],
     };
   }
+
+  /**
+   * Snapshot this store's fingerprints as a {@link BaselineFile} (the committed
+   * shape, D-10). Symmetric to {@link toShard}; used by the reporter to feed a
+   * loaded committed baseline into the pure `refresh` (Plan 03-03). Unlike a
+   * shard it carries NO `seen` list — the committed file is just the entries.
+   */
+  toBaselineFile(): BaselineFile {
+    return {
+      version: STORE_FORMAT_VERSION,
+      entries: Object.fromEntries(this.fingerprints),
+    };
+  }
 }

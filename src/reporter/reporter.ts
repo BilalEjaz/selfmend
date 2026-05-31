@@ -1,5 +1,8 @@
 import type {
+  FullConfig,
+  FullResult,
   Reporter,
+  Suite,
   TestCase,
   TestResult,
 } from "@playwright/test/reporter";
@@ -12,6 +15,16 @@ import {
   type RefusedReason,
   type SelfmendEvent,
 } from "../integration/events.js";
+import { mergeShards, refresh, prune } from "../store/merge.js";
+import { serialize } from "../store/serialize.js";
+import {
+  atomicWrite,
+  baselinePath,
+  deleteShards,
+  loadBaseline,
+  readShards,
+  shardsDir,
+} from "../store/persistence.js";
 
 /**
  * The summary-only selfmend Reporter (REP-01, D-05, D-06, D-07).
@@ -40,6 +53,51 @@ export default class SelfmendReporter implements Reporter {
   /** All REFUSED attempts across the run (REP-02, D-04), in completion order. */
   private readonly refused: RefusedEvent[] = [];
 
+  /**
+   * rootDir the store is anchored under, captured in {@link onBegin} from
+   * `FullConfig.rootDir`. The teardown merge in {@link onEnd} resolves the
+   * baseline + shards paths under it (honoring SELFMEND_STORE_DIR via
+   * persistence.ts). Empty until onBegin runs (a unit-rendered reporter that
+   * never calls onBegin/onEnd does no IO).
+   */
+  private rootDir = "";
+
+  /**
+   * Whether THIS run is a complete, unfiltered run (the D-09 prune gate's
+   * completeness half). Captured in {@link onBegin} from the FullConfig filters
+   * and combined in {@link onEnd} with the run status + the SELFMEND_PRUNE
+   * opt-in. Defaults to `false` so a reporter that never sees onBegin can never
+   * prune.
+   */
+  private complete = false;
+
+  /** The post-filter planned test count (diagnostics only, D-09 Open Q2). */
+  private plannedTestCount = 0;
+
+  /**
+   * Capture the run-completeness signal (REP-01, D-09). The reporter is the only
+   * component holding BOTH the post-filter planned {@link Suite} and (later, in
+   * onEnd) the {@link FullResult}, so the prune gate lives here, not in
+   * globalTeardown (which sees neither). This does NOT touch a page/DOM, so the
+   * summary-only invariant (D-05) is preserved.
+   */
+  onBegin(config: FullConfig, suite: Suite): void {
+    this.rootDir = config.rootDir;
+    this.complete = isComplete(config);
+    this.plannedTestCount = suite.allTests().length;
+    // Open Q2/A3 empirical confirm: log the real 1.60 default grep
+    // representation once, behind a debug flag, so completeness detection can be
+    // verified against the live runner without noise in normal runs.
+    if (process.env.SELFMEND_DEBUG) {
+      // eslint-disable-next-line no-console
+      console.log(
+        `[selfmend] onBegin grep=${describeGrep(config.grep)} grepInvert=${
+          config.grepInvert === null ? "null" : describeGrep(config.grepInvert)
+        } shard=${config.shard === null ? "null" : JSON.stringify(config.shard)} complete=${this.complete} planned=${this.plannedTestCount}`,
+      );
+    }
+  }
+
   onTestEnd(_test: TestCase, result: TestResult): void {
     for (const attachment of result.attachments) {
       if (attachment.name !== HEAL_ATTACHMENT_NAME) continue;
@@ -50,14 +108,60 @@ export default class SelfmendReporter implements Reporter {
     }
   }
 
-  onEnd(): void {
+  async onEnd(result: FullResult): Promise<void> {
+    // 1. Render the boxed summary EXACTLY as before. The reporter's primary,
+    //    user-facing job is unchanged (D-05/D-06). Print first so the summary
+    //    shows even if the teardown merge below warns.
     const out = this.render();
-    // Print so it interleaves with the run summary and is captured by tests /
-    // CI logs. Plain when colors are unsupported (picocolors no-ops). `console`
-    // keeps the library src free of `@types/node` (this runs in the main
-    // process where `console` is always present).
     // eslint-disable-next-line no-console
     console.log(out);
+
+    // 2. Teardown-time merge side effect (D-08/D-09/D-11/D-12). The reporter is
+    //    the single main-process writer of the committed baseline: it merges all
+    //    worker shards, refreshes (always, non-destructive), conditionally
+    //    prunes (opt-in + complete-run-only), atomically writes the single
+    //    baseline.json, and deletes the transient shards. Wrapped so a merge/IO
+    //    failure NEVER crashes the user's run on teardown (T-03-08, Pitfall 5):
+    //    a warning is logged and the run is left untouched.
+    try {
+      await this.mergeAndPersist(result);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[selfmend] baseline merge skipped (run unaffected): ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    }
+  }
+
+  /**
+   * The teardown merge: shards -> merge -> refresh -> (gated prune) -> serialize
+   * -> atomic single-writer baseline.json -> delete shards. Reads shard FILES
+   * only; holds no page/DOM (D-05). Skips silently when no rootDir was captured
+   * (a unit-rendered reporter that never ran onBegin).
+   */
+  private async mergeAndPersist(result: FullResult): Promise<void> {
+    if (this.rootDir === "") return;
+    const dir = shardsDir(this.rootDir);
+    const shards = await readShards(dir);
+    const merged = mergeShards(shards);
+
+    // Load the existing committed baseline (fail-soft) and refresh it (D-08,
+    // always, overwrite-on-recapture, never destructive).
+    const baselineStore = await loadBaseline(this.rootDir);
+    let next = refresh(baselineStore.toBaselineFile(), merged);
+
+    // Destructive prune is gated: complete unfiltered run AND passed AND the
+    // explicit SELFMEND_PRUNE opt-in (D-09, Pitfall 2, Open Q1).
+    if (shouldPrune(this.complete, result.status, process.env.SELFMEND_PRUNE)) {
+      next = prune(next, merged.seen);
+    }
+
+    // Single atomic write of the one committed artifact (D-03/D-11), then drop
+    // the transient shards (D-12).
+    await atomicWrite(baselinePath(this.rootDir), serialize(next));
+    await deleteShards(dir);
   }
 
   /**
@@ -295,4 +399,78 @@ export function stripAnsi(s: string): string {
 /** Visible (color-stripped) length of a line, for box sizing. */
 function visibleLength(s: string): number {
   return stripAnsi(s).length;
+}
+
+/**
+ * Stringify a `grep`/`grepInvert` value for the debug log (Open Q2/A3). A
+ * RegExp renders via its source; an array renders each element; anything else
+ * via `String`. Diagnostics-only, never affects the gate decision.
+ */
+function describeGrep(g: RegExp | RegExp[]): string {
+  if (Array.isArray(g)) return `[${g.map((r) => String(r)).join(", ")}]`;
+  return String(g);
+}
+
+/**
+ * True iff a single RegExp is the match-all default. Playwright's 1.60 default
+ * FullConfig.grep is the RegExp whose source is ".*" (VERIFIED against installed
+ * type defs; confirm empirically via SELFMEND_DEBUG). We compare the `source` so
+ * an equivalent always-matching default (e.g. an empty pattern) also counts.
+ */
+function isMatchAllRegExp(re: RegExp): boolean {
+  return re.source === ".*" || re.source === "(?:)" || re.source === "";
+}
+
+/**
+ * Whether `grep` represents the match-all default (Open Q2/A3). Robust to BOTH
+ * representations the runner might use: a bare match-all RegExp (the 1.60
+ * default), OR an array, where an EMPTY array (no grep filter) or an array of
+ * only match-all regexes both count as match-all. Any concrete pattern is not
+ * match-all.
+ */
+function isMatchAllGrep(grep: RegExp | RegExp[]): boolean {
+  if (Array.isArray(grep)) {
+    return grep.length === 0 || grep.every(isMatchAllRegExp);
+  }
+  return isMatchAllRegExp(grep);
+}
+
+/**
+ * The run-completeness predicate (D-09). A run is COMPLETE, and eligible for the
+ * destructive prune, only when NO filter narrowed it: `grep` is match-all,
+ * `grepInvert` is null, and `shard` is null. Any `--grep`, `--grep-invert`, or
+ * `--shard` makes the run partial, so prune must be skipped (Pitfall 2).
+ * Exported for unit-testing the gate without a runner.
+ *
+ * Reads only the three filter fields off {@link FullConfig}, so a structurally
+ * minimal stub suffices in tests.
+ */
+export function isComplete(
+  config: Pick<FullConfig, "grep" | "grepInvert" | "shard">,
+): boolean {
+  return (
+    isMatchAllGrep(config.grep) &&
+    config.grepInvert === null &&
+    config.shard === null
+  );
+}
+
+/**
+ * The destructive-prune gate (D-09, Open Q1). Returns true ONLY when ALL hold:
+ *  - the run was COMPLETE (no grep/grepInvert/shard filter), {@link isComplete};
+ *  - the run PASSED (`result.status === 'passed'`); and
+ *  - the explicit `SELFMEND_PRUNE` opt-in env is set to a non-empty value.
+ *
+ * Refresh-on-pass (the non-destructive D-08 write) ALWAYS runs and is NOT gated
+ * here; only the destructive prune is. Conservative by design: an
+ * undetectable-as-partial run (`--last-failed`, `--only-changed`) at worst
+ * leaves stale entries (the file grows slowly), never wrongly deletes a valid
+ * baseline. Exported for unit-testing.
+ */
+export function shouldPrune(
+  complete: boolean,
+  status: FullResult["status"],
+  pruneEnv: string | undefined,
+): boolean {
+  return complete && status === "passed" && Boolean(pruneEnv);
 }

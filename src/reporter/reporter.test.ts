@@ -343,13 +343,13 @@ describe("shouldPrune gate (D-08 refresh always / D-09 prune opt-in + complete-r
 
 describe("merge -> refresh -> (gated prune) decision over the pure layer (D-08/D-09)", () => {
   const baseline = {
-    version: STORE_FORMAT_VERSION,
+    version: STORE_FORMAT_VERSION as 1,
     entries: { "k-old": fp("OldButton") },
   };
   // One worker shard captured a NEW key but did NOT see the old key this run.
   const shards: ShardFile[] = [
     {
-      version: STORE_FORMAT_VERSION,
+      version: STORE_FORMAT_VERSION as 1,
       captures: { "k-new": fp("NewButton") },
       seen: ["k-new"],
     },
