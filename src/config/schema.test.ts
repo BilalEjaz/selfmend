@@ -46,6 +46,42 @@ describe("configSchema", () => {
   it("rejects a non-string testIdAttr value", () => {
     expect(() => configSchema.parse({ testIdAttr: 123 })).toThrowError();
   });
+
+  // --- margin gate config (CFG-02, D-01, D-07 global-only, D-08) ---
+
+  it("defaults margin to 0.05 while leaving threshold at 0.9 (D-08, threshold not renamed)", () => {
+    const cfg = configSchema.parse({});
+    expect(cfg.margin).toBe(0.05);
+    // D-08: the floor key keeps its name and conservative default.
+    expect(cfg.threshold).toBe(0.9);
+  });
+
+  it("accepts an in-range margin and overrides the default", () => {
+    expect(configSchema.parse({ margin: 0.1 }).margin).toBe(0.1);
+  });
+
+  it("accepts the boundary margin values 0 and 1", () => {
+    expect(configSchema.parse({ margin: 0 }).margin).toBe(0);
+    expect(configSchema.parse({ margin: 1 }).margin).toBe(1);
+  });
+
+  it("rejects a margin below 0 with a readable message (ASVS V5)", () => {
+    expect(() => configSchema.parse({ margin: -0.1 })).toThrowError(
+      /margin must be >= 0/,
+    );
+  });
+
+  it("rejects a margin above 1 with a readable message (ASVS V5)", () => {
+    expect(() => configSchema.parse({ margin: 1.5 })).toThrowError(
+      /margin must be <= 1/,
+    );
+  });
+
+  it("rejects a non-numeric margin with a readable message", () => {
+    expect(() => configSchema.parse({ margin: "high" })).toThrowError(
+      /margin must be a number/,
+    );
+  });
 });
 
 describe("defaultConfig", () => {
