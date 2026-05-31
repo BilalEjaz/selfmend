@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Completed 03-01-PLAN.md
-last_updated: "2026-05-31T14:40:40.179Z"
+last_updated: "2026-05-31T15:06:56.655Z"
 last_activity: 2026-05-31
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 10
-  completed_plans: 8
+  completed_plans: 9
   percent: 50
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-05-31)
 ## Current Position
 
 Phase: 03 (Persistence & Parallel-Worker Safety) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-05-31
 
-Progress: [████████░░] 80%
+Progress: [█████████░] 90%
 
 ## Performance Metrics
 
@@ -61,6 +61,7 @@ Progress: [████████░░] 80%
 | Phase 02 P01 | 5 | 3 tasks | 8 files |
 | Phase 02 P02 | 6 min | 4 tasks | 8 files |
 | Phase 03 P01 | 9 | 3 tasks | 6 files |
+| Phase 03 P02 | 20 | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -91,6 +92,9 @@ Recent decisions affecting current work:
 - [Phase ?]: [03-01]: store-format version is a z.literal gate — mismatch/malformed safeParses to canonical EMPTY (ignore-and-recapture), never throws (D-10)
 - [Phase ?]: [03-01]: strict fingerprintSchema (eight derived signals only) rejects raw-DOM keys so PII never persists to the committed file (D-02); serializer rebuilds in fixed field + sorted key order for byte-stable zero-churn output (D-03)
 - [Phase ?]: [03-01]: mergeShards same-key precedence = larger value-derived compare key (not array position) so merge is order-independent (D-13); prune is a two-arg pure fn with NO completeness flag, gating deferred to reporter (D-09)
+- [Phase ?]: [03-02] persistence.ts is the single fs/path seam; all store paths via path.resolve(rootDir,...) incl. the test/env override, so a configured path can never escape the project (T-03-05)
+- [Phase ?]: [03-02] atomicWrite = temp sibling + fs.rename with EPERM/EBUSY/EACCES retry-backoff; exhausted retries rm temp + rethrow so a reader never sees a partial committed file (T-03-04)
+- [Phase ?]: [03-02] identify() is occurrence-based (selector,testFile,testTitle,occurrence); index incremented at wrapLocator CREATION, per-content per-test, so capture-run and broken-heal-run compute the identical key (D-04/D-05); no key -> no heal preserved (D-07)
 
 ### Pending Todos
 
@@ -110,6 +114,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-31T14:40:40.171Z
+Last session: 2026-05-31T15:06:19.503Z
 Stopped at: Completed 03-01-PLAN.md
 Resume file: None
