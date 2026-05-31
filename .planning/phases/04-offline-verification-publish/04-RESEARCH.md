@@ -381,7 +381,11 @@ Notes: the offline PRIV-01 test rides inside `npm run test:e2e` (it is just anot
 | A2 | `@playwright/test@1.42.0` installs + runs on Node 22/24 with this code (floor leg of the matrix) | CI matrix | Medium — the matrix run is itself the proof; if 1.42 fails, document the real floor and raise it (Pitfall 8). The wrapper pattern + `errors.TimeoutError` are old-stable APIs, so 1.42 is expected to pass, but it was NOT run this session (only 1.60 is installed locally) |
 | A3 | Disabling dist source maps is harmless for consumers | Pitfall 5 | Low — maps are optional; only affects debug stack traces into the lib |
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+Both resolved for planning and encoded in the Phase 4 plans:
+- **Q1 RESOLVED:** one canonical PRIV-01 heal-cycle test under the egress block is the proof; persistence/merge is statically network-free, so no separate "merge offline" test is required. Implemented in 04-01 Task 2.
+- **Q2 RESOLVED:** the CI matrix is the empirical proof for the `@playwright/test@1.42` floor; if the 1.42 leg fails, raise the declared peer floor (honest-floor rule) rather than claim false support. Implemented in 04-03 Task 1.
 
 1. **Should the offline test also exercise the reporter merge (the "+ merge" in D-03), or is the heal-cycle + a static "no network import in persistence" assertion sufficient?**
    - What we know: the store/merge path imports only `node:fs`/`node:path` ([VERIFIED]); the parallel driver specs already exercise capture→shard→merge.
