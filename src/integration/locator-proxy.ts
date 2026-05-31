@@ -260,7 +260,7 @@ export function wrapLocator(
  * two genuinely-different refinements share one baseline identity and risk a
  * heal matched against the wrong element's fingerprint (the CR-01 collision
  * class) — we fold in a DISTINGUISHING token: its `typeof` plus a per-test
- * monotonic index from {@link HealContext.nextStep}. Distinct non-serializable
+ * monotonic index from {@link HealContext.nextOccurrence}. Distinct non-serializable
  * args within a test therefore get distinct tokens. The index is a per-test
  * occurrence count under a fixed content key, so it is deterministic within the
  * test (the same reason the main occurrence key is cross-run stable, D-05).

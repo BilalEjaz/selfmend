@@ -4,6 +4,11 @@ import { defaultConfig } from "../config/defaults.js";
 import type { SelfmendConfig } from "../config/schema.js";
 import { BaselineStore } from "../store/store.js";
 import {
+  loadBaseline,
+  writeShard,
+  shardPath,
+} from "../store/persistence.js";
+import {
   wrapLocator,
   createOccurrenceCounter,
   type HealContext,
@@ -98,10 +103,30 @@ export const healingFixture = base.extend<
   // Worker-scoped config option; override via test.use({ selfmendConfig }).
   selfmendConfig: [defaultConfig, { option: true, scope: "worker" }],
 
-  // Worker-scoped store: one in-process baseline per worker (Phase 1).
+  // Worker-scoped store (CAP-02 load half + CAP-03 capture half, D-11):
+  //  - SETUP: load the committed baseline.json read-only so this worker's
+  //    in-memory store is seeded with prior-run fingerprints; a locator broken
+  //    THIS run can heal against run N-1's capture loaded from the committed
+  //    file alone (CAP-02). A missing/bad file loads as EMPTY (never throws).
+  //  - TEARDOWN (code after `use`, runs at worker end): flush this worker's
+  //    captures + seen-keys to its OWN shard named by `parallelIndex` — bounded,
+  //    unique among concurrently-running workers, and overwritten by a restart
+  //    of the same parallelIndex (RESEARCH Pattern 2). Workers NEVER write
+  //    baseline.json — only their shard (the CAP-03 anti-pattern is avoided);
+  //    the single committed write happens once in the reporter's onEnd.
+  // `rootDir` anchors the store; the SELFMEND_STORE_DIR override (resolved
+  // inside persistence.ts under rootDir) lets the parallel/prune/persist specs
+  // redirect to a temp dir so they never touch the repo's real .selfmend.
   selfmendStore: [
-    async ({}, use) => {
-      await use(new BaselineStore());
+    async ({}, use, workerInfo) => {
+      const rootDir = workerInfo.config.rootDir;
+      const store = await loadBaseline(rootDir);
+      await use(store);
+      // Worker teardown: lock-free per-worker shard flush.
+      await writeShard(
+        shardPath(rootDir, workerInfo.parallelIndex),
+        store.toShard(),
+      );
     },
     { scope: "worker" },
   ],
