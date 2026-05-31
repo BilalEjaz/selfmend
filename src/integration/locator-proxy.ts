@@ -294,19 +294,35 @@ async function actionOrHeal(
     const decision = decide(scored, ctx.config.threshold);
     if (!decision.heal) throw err; // below floor / no candidate -> re-throw original
 
-    await attachHealEvent(ctx.testInfo, {
-      testName: ctx.testInfo.title,
-      originalSelector: selector,
-      healedTarget: decision.newSelector,
-      score: decision.event.score,
-    });
-
     // Rebind = FRESH page.locator(newSelector) (cannot reuse an ElementHandle,
     // issue #10571). Replay the SAME action with a bounded replay budget.
     const healed = ctx.page.locator(decision.newSelector);
     const replayInvoke = healed[method as keyof Locator] as (
       ...a: unknown[]
     ) => Promise<unknown>;
-    return replayInvoke.apply(healed, withTimeout(args, ctx.replayTimeoutMs));
+
+    let result: unknown;
+    try {
+      result = await replayInvoke.apply(
+        healed,
+        withTimeout(args, ctx.replayTimeoutMs),
+      );
+    } catch {
+      // The matched target was found but the replay itself failed (also broken,
+      // or the bounded replay budget elapsed). Surface the user's ORIGINAL
+      // error so the failure is not masked by a misleading replay error
+      // (WR-03), and do NOT attach a heal event — there was no successful heal.
+      throw err;
+    }
+
+    // Attach the heal event ONLY after the replay actually succeeded, so the
+    // end-of-run summary never over-reports a heal that did not stick (WR-03).
+    await attachHealEvent(ctx.testInfo, {
+      testName: ctx.testInfo.title,
+      originalSelector: selector,
+      healedTarget: decision.newSelector,
+      score: decision.event.score,
+    });
+    return result;
   }
 }
