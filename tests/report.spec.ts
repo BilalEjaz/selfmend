@@ -46,9 +46,12 @@ test("REP-01: a real heal produces a selfmend-heal attachment the reporter can r
   // Drive a real heal (identical mechanism to heal.spec.ts): capture on the
   // good page, then break the class selector on broken.html and heal.
   await page.goto(INDEX_URL);
-  await page.locator(".btn-primary").waitFor();
+  // Reuse one wrapped locator for capture + heal so its baseline key is stable
+  // across both calls (CR-01).
+  const submit = page.locator(".btn-primary");
+  await submit.waitFor();
   await page.goto(BROKEN_URL);
-  await page.locator(".btn-primary").click({ timeout: 1200 });
+  await submit.click({ timeout: 1200 });
 
   // The reporter reads exactly this attachment shape in onTestEnd.
   const healAttachments = testInfo.attachments.filter(

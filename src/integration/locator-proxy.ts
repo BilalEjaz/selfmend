@@ -106,6 +106,25 @@ export interface HealContext {
    * flaky heal target cannot balloon the per-action wall-clock (FINDINGS (b)).
    */
   replayTimeoutMs: number;
+  /**
+   * Per-TEST monotonic step source (CR-01). Called once per `wrapLocator` to
+   * stamp a distinct step into the baseline key, so two genuinely-different
+   * elements addressed by the SAME selector string at different points in a
+   * test get distinct baseline identities and cannot heal against each other's
+   * fingerprint. A single reused wrapped locator keeps one key for its whole
+   * lifetime (capture->heal correspondence). Single-worker Phase 1 only — no
+   * cross-run/parallel persistence (that is Phase 3).
+   */
+  nextStep: () => number;
+}
+
+/**
+ * Build a fresh per-test monotonic step counter (CR-01). Each call returns the
+ * next integer starting at 0; a new counter (a new test) restarts at 0.
+ */
+export function createStepCounter(): () => number {
+  let step = 0;
+  return () => step++;
 }
 
 /** Detect a genuine post-auto-wait resolution timeout (FINDINGS (a) idiom). */
@@ -162,9 +181,11 @@ export function wrapLocator(
   selector: string,
   ctx: HealContext,
 ): Locator {
-  // Monotonic step within this locator's identity, so the same selector used
-  // at different steps keeps distinct baselines.
-  const key = ctx.store.identify(selector, ctx.testFile, 0);
+  // Per-test monotonic step (CR-01): stamped ONCE per wrapped locator so two
+  // separate factory calls of the same selector string (two potentially
+  // different elements) get distinct baseline keys, while a single reused
+  // wrapped locator keeps one key across its capture->heal lifetime.
+  const key = ctx.store.identify(selector, ctx.testFile, ctx.nextStep());
 
   return new Proxy(realLocator, {
     get(target, prop, receiver) {

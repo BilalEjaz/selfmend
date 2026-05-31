@@ -31,9 +31,13 @@ const REPLAY_FAILS_URL = pathToFileURL(
 test("WR-03: a failing healed-replay re-throws and attaches no heal event", async ({
   page,
 }, testInfo) => {
-  // 1. Capture on the good page.
+  // 1. Capture on the good page. Reuse ONE wrapped locator for capture + heal
+  //    so the baseline key is stable across both calls (CR-01) and this test
+  //    genuinely exercises the replay-failure path (not a no-fingerprint
+  //    re-throw).
   await page.goto(INDEX_URL);
-  await page.locator(".btn-primary").click({ timeout: 1200 });
+  const submit = page.locator(".btn-primary");
+  await submit.click({ timeout: 1200 });
 
   // 2 + 3. Broken selector + a still-present element that the replay cannot act
   // on (overlay intercepts the click).
@@ -42,7 +46,7 @@ test("WR-03: a failing healed-replay re-throws and attaches no heal event", asyn
   // The action must FAIL: original times out -> heal matches -> replay click
   // times out under the overlay -> ORIGINAL error surfaces. No false green.
   await expect(async () => {
-    await page.locator(".btn-primary").click({ timeout: 1200 });
+    await submit.click({ timeout: 1200 });
   }).rejects.toThrow();
 
   // And crucially: NO heal event was attached. The heal was attempted but the

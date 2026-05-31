@@ -28,14 +28,17 @@ test("WR-01: a waitFor({state:'hidden'}) timeout does NOT heal and fails normall
 
   // Capture a fingerprint for the submit button on a successful action, so a
   // baseline EXISTS for this key — if waitFor were healable, the heal path
-  // would have something to match against and could false-green.
-  await page.locator(".btn-primary").click({ timeout: 1200 });
+  // would have something to match against and could false-green. Reuse ONE
+  // wrapped locator so the click (capture) and the waitFor share a baseline
+  // key (CR-01).
+  const submit = page.locator(".btn-primary");
+  await submit.click({ timeout: 1200 });
 
   // The submit button is visible and never hides. waitFor({state:'hidden'})
   // must time out and the TimeoutError must propagate — NOT be swallowed by a
   // heal that re-finds the (still-visible) element.
   await expect(async () => {
-    await page.locator(".btn-primary").waitFor({ state: "hidden", timeout: 1000 });
+    await submit.waitFor({ state: "hidden", timeout: 1000 });
   }).rejects.toThrow();
 
   // No heal event was attached: waitFor is not healable.

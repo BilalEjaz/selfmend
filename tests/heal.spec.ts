@@ -29,19 +29,22 @@ test("HEAL-01: a broken-but-present selector heals after timeout and the test st
   page,
 }, testInfo) => {
   // 1. Capture on the good page: resolve the submit button via its class
-  //    selector (records the fingerprint, incl. the stable test-id).
+  //    selector (records the fingerprint, incl. the stable test-id). Reuse the
+  //    SAME wrapped locator for capture AND heal so its baseline key is stable
+  //    across both calls (CR-01: distinct factory calls get distinct steps).
   await page.goto(INDEX_URL);
-  await page.locator(".btn-primary").waitFor();
+  const submit = page.locator(".btn-primary");
+  await submit.waitFor();
 
-  // 2. The class is renamed in broken.html. The SAME selector string keeps the
-  //    same baseline key, so the heal loop has a fingerprint to match against.
+  // 2. The class is renamed in broken.html. The SAME locator keeps the same
+  //    baseline key, so the heal loop has a fingerprint to match against.
   await page.goto(BROKEN_URL);
 
   // The real attempt auto-waits to timeout (.btn-primary is gone), throws
   // TimeoutError, the scorer matches the surviving Submit button (identity
   // intact -> above the 0.9 floor), and the action replays green. A short
   // explicit timeout keeps the test fast.
-  await page.locator(".btn-primary").click({ timeout: 1200 });
+  await submit.click({ timeout: 1200 });
 
   // The healed element is the same semantic Submit button.
   const healed = page.locator('[data-testid="submit-btn"]');
