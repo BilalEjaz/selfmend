@@ -25,7 +25,7 @@ Requirements for the initial release. v1 is locator healing only.
 - [x] **MATCH-01**: When a locator fails to resolve, the plugin enumerates candidate elements and scores each against the stored fingerprint using weighted signals
 - [x] **MATCH-02**: A heal is accepted only when the top candidate's score clears an absolute confidence floor
 - [x] **MATCH-03**: A heal is accepted only when the top candidate beats the second-best candidate by a configurable margin, preventing ambiguous matches
-- [ ] **MATCH-04**: When no candidate clears both gates, the plugin does not heal and the locator fails normally (no false greens)
+- [x] **MATCH-04**: When no candidate clears both gates, the plugin does not heal and the locator fails normally (no false greens)
 
 ### Live Heal
 
@@ -35,7 +35,7 @@ Requirements for the initial release. v1 is locator healing only.
 ### Reporting
 
 - [x] **REP-01**: At end of run, the plugin prints a console summary of every heal: original selector, healed target, confidence score, and margin
-- [ ] **REP-02**: The summary clearly distinguishes healed locators from failed-to-heal ones, giving the team a visible audit trail
+- [x] **REP-02**: The summary clearly distinguishes healed locators from failed-to-heal ones, giving the team a visible audit trail
 
 ### Privacy & Offline
 
@@ -91,11 +91,11 @@ Which phases cover which requirements. Populated during roadmap creation.
 | MATCH-01 | Phase 1 | Complete |
 | MATCH-02 | Phase 2 | Complete |
 | MATCH-03 | Phase 2 | Complete |
-| MATCH-04 | Phase 2 | Pending |
+| MATCH-04 | Phase 2 | Complete |
 | HEAL-01 | Phase 1 | Complete |
 | HEAL-02 | Phase 1 | Complete |
 | REP-01 | Phase 1 | Complete |
-| REP-02 | Phase 2 | Pending |
+| REP-02 | Phase 2 | Complete |
 | PRIV-01 | Phase 4 | Pending |
 | CFG-01 | Phase 1 | Complete |
 | CFG-02 | Phase 2 | Complete |

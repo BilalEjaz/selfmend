@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
+status: verifying
 stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-05-31T03:28:34.216Z"
+last_updated: "2026-05-31T03:39:51.499Z"
 last_activity: 2026-05-31
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 7
-  completed_plans: 6
-  percent: 25
+  completed_plans: 7
+  percent: 50
 ---
 
 # Project State
@@ -27,10 +27,10 @@ See: .planning/PROJECT.md (updated 2026-05-31)
 
 Phase: 02 (Trust Hardening) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-05-31
 
-Progress: [█████████░] 86%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -58,6 +58,7 @@ Progress: [█████████░] 86%
 | Phase 01 P04 | 7 | 3 tasks | 10 files |
 | Phase 01 P05 | 3 | 3 tasks | 8 files |
 | Phase 02 P01 | 5 | 3 tasks | 8 files |
+| Phase 02 P02 | 6 min | 4 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -83,6 +84,8 @@ Recent decisions affecting current work:
 - [Phase ?]: [01-05]: public selfmend entry re-exports healingFixture as test + expect unchanged (D-02/D-03 one-line swap); named-only exports + selfmend/reporter subpath so import/require resolve without .default; REP-02 margin column deferred to Phase 2 (D-07)
 - [Phase ?]: [02-01]: margin gate is an absolute second-best gap with an inclusive >= boundary (epsilon-guarded against float drift); floor checked before margin so two below-floor candidates report below-floor not ambiguous (D-01, D-03)
 - [Phase ?]: [02-01]: weight-ordering invariant pinned relatively (identity > structure by >0.05) against fixed SIGNAL_WEIGHTS, scorer untouched (D-09); global margin config key default 0.05, threshold unchanged (D-07, D-08)
+- [Phase ?]: [02-02]: transport widened to SelfmendEvent tagged union on the unchanged selfmend-heal attachment; missing kind decodes as healed (back-compat); refused scoped to 3 post-scoring reasons (D-05)
+- [Phase ?]: [02-02]: proxy attaches refused event then unconditionally re-throws (attach guarded, throw unguarded) so observability never false-greens (D-06, MATCH-04); reporter prints healed box then separate could-not-heal section (REP-02, D-04); 0.05 margin empirically refuses an ambiguous duplicate while single-survivor heal still heals
 
 ### Pending Todos
 
@@ -102,6 +105,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-31T03:28:34.205Z
+Last session: 2026-05-31T03:39:31.104Z
 Stopped at: Completed 02-01-PLAN.md
 Resume file: None
