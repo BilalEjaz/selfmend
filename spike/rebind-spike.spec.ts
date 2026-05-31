@@ -244,6 +244,51 @@ test("PROOF 3: expect(locator) matchers bypass the heal path (assertions stay sa
 });
 
 // ---------------------------------------------------------------------------
+// PROOF 4 — measure the timeout-budget split (real attempt vs heal enumeration + replay)
+// and assert total wall-clock is BOUNDED (threat T-03-03: unbounded heal DoS).
+// ---------------------------------------------------------------------------
+test("PROOF 4: timeout budget is measured and bounded (real attempt vs heal replay)", async ({
+  page,
+}) => {
+  await page.goto(BROKEN_URL);
+
+  const recorded: Array<{ realMs: number; healMs: number; newSelector: string }> = [];
+  const hook: HealHook = {
+    async rebind() {
+      const candidate = '[data-testid="primary-action"]';
+      return (await page.locator(candidate).count()) === 1 ? candidate : null;
+    },
+    record(ev) {
+      recorded.push({ realMs: ev.realMs, healMs: ev.healMs, newSelector: ev.newSelector });
+    },
+  };
+
+  const broken = wrapLocator(page, page.locator('[data-testid="submit-btn"]'), hook);
+
+  const wallStart = Date.now();
+  await broken.click();
+  const totalMs = Date.now() - wallStart;
+
+  expect(recorded).toHaveLength(1);
+  const { realMs, healMs } = recorded[0];
+
+  // The real attempt should consume ~the explicit REAL_ATTEMPT_TIMEOUT_MS (it ran to timeout).
+  // The heal (enumeration + replay) should be a SMALL fraction of it.
+  // Surface the numbers so they can be copied into FINDINGS.md.
+  // eslint-disable-next-line no-console
+  console.log(
+    `[BUDGET] realAttempt=${realMs}ms healEnumReplay=${healMs}ms total=${totalMs}ms ` +
+      `(configured realTimeout=${REAL_ATTEMPT_TIMEOUT_MS}ms replayTimeout=${REPLAY_TIMEOUT_MS}ms)`,
+  );
+
+  // Bound assertions (the de-risk): real attempt dominates; heal is bounded and short.
+  expect(realMs).toBeGreaterThanOrEqual(REAL_ATTEMPT_TIMEOUT_MS - 200);
+  expect(realMs).toBeLessThan(REAL_ATTEMPT_TIMEOUT_MS + 1500);
+  expect(healMs).toBeLessThan(REPLAY_TIMEOUT_MS); // heal never exceeds its own budget
+  expect(totalMs).toBeLessThan(REAL_ATTEMPT_TIMEOUT_MS + REPLAY_TIMEOUT_MS + 1000); // bounded
+});
+
+// ---------------------------------------------------------------------------
 // SANITY — the SAME wrapped locator works WITHOUT healing on the un-mutated baseline.
 // Confirms the wrapper is transparent on the green hot path (no premature heal — HEAL-02).
 // ---------------------------------------------------------------------------
