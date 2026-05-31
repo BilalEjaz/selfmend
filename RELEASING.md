@@ -10,23 +10,41 @@ out of automation for v1.
 
 `prepublishOnly` (`npm run build && npm run lint:pack`) runs automatically on
 `npm publish`, so the published `dist/` is always freshly built and publint-clean
-— you cannot ship a stale or unbuilt `dist`.
+— you cannot ship a stale or unbuilt `dist`. **Scope of the auto guard:** it
+covers stale/unbuilt `dist` and publint package-shape only. The type-resolution
+check (`attw`, via `npm run lint:types`) is deliberately NOT in `prepublishOnly`
+— running a nested `npm pack` inside an in-progress `npm publish` lifecycle
+misbehaves on Windows — so wrong-types / CJS-ESM-masquerade regressions are
+caught by CI and by the **mandatory** `npm run verify` pre-flight below, not by
+the `npm publish` gate itself. Do not skip the pre-flight.
 
 ---
 
 ## Pre-flight (verify locally before publishing)
 
-Run the publish-readiness proof. Every step must be green and nothing is
-published:
+First run the single combined gate. It is the non-skippable guard that runs the
+build, package-shape lint (`publint`), the wrong-types check (`attw`, via
+`lint:types`), the typecheck, and the unit tests in one command — so a local
+publisher cannot omit the `attw` type-resolution check:
 
 ```sh
 npm ci                  # clean install from the committed lockfile
-npm run build           # tsdown -> dist (exit 0)
-npm run lint:pack       # publint -> "All good!"
+npm run verify          # build + lint:pack + lint:types (attw) + typecheck + unit tests — ALL must pass
+```
+
+Then run the publish-readiness proof. Every step must be green and nothing is
+published:
+
+```sh
 npm run lint:types      # attw -> all modern resolvers green (node10 ./reporter skull is ignored, expected)
 npm pack --dry-run      # tarball MUST be dist/ + README.md + package.json ONLY (14 files; no src, tests, .env, .selfmend, or .map)
 npm publish --dry-run   # MUST print "+ selfmend@0.1.0" and publish NOTHING
 ```
+
+`npm run verify` already runs `build`, `lint:pack`, and `lint:types`; the steps
+above re-run `lint:types` explicitly as the final types gate and add the
+tarball-surface and dry-run checks. Do NOT run `npm publish` unless
+`npm run verify` exited 0.
 
 If `npm publish --dry-run` does not print `+ selfmend@0.1.0`, or the tarball
 lists anything outside `dist/`, `README.md`, `package.json`, STOP and fix it
