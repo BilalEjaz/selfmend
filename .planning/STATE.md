@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Completed 01-02-PLAN.md
-last_updated: "2026-05-31T01:33:53.249Z"
+last_updated: "2026-05-31T01:42:01.448Z"
 last_activity: 2026-05-31
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 5
-  completed_plans: 2
+  completed_plans: 3
   percent: 0
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-05-31)
 ## Current Position
 
 Phase: 01 (Thinnest Real Heal) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 Status: Ready to execute
 Last activity: 2026-05-31
 
-Progress: [████░░░░░░] 40%
+Progress: [██████░░░░] 60%
 
 ## Performance Metrics
 
@@ -54,6 +54,7 @@ Progress: [████░░░░░░] 40%
 *Updated after each plan completion*
 | Phase 01 P01 | 3 | 2 tasks | 12 files |
 | Phase 01 P02 | 4 | 3 tasks | 5 files |
+| Phase 01 P03 | 7 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -69,6 +70,9 @@ Recent decisions affecting current work:
 - [Phase ?]: [01-01]: dual-package exports use per-format type conditions (.d.mts/.d.cts) matching tsdown output; verified with publint + attw
 - [Phase ?]: [01-02]: matching core is pure (Playwright/fs-free), deterministic, TDD-built; false-green guard lives in decide() via a conservative inclusive floor
 - [Phase ?]: [01-02]: scorer skips signals absent on both sides so missing signals never dilute to 0; HealEvent retains runner-up score so the Phase 2 margin gate needs no contract change
+- [Phase ?]: [01-03]: live-rebind PROVEN on PW 1.60 — catch errors.TimeoutError (instanceof OR name), rebind via fresh page.locator(newSel), replay; never pre-check count()
+- [Phase ?]: [01-03]: Locator Proxy partition — ACTION set heals, CHAIN set re-wraps, assertions pass through expect matchers (sacred by construction); FINDINGS.md is the plan-04 contract
+- [Phase ?]: [01-03]: timeout budget = explicit {timeout} on real attempt + separate bounded replay; measured heal overhead ~4% of real attempt (realAttempt=1207ms, heal=48ms)
 
 ### Pending Todos
 
@@ -76,7 +80,7 @@ None yet.
 
 ### Blockers/Concerns
 
-- [Phase 1]: Live locator-rebind mechanics flagged for a phase-1 spike / research — how to intercept a genuine post-timeout resolution failure and replay against a substituted element via the public fixture/wrapper surface, validated across Playwright minors. Resolve before committing the integration design.
+- [Phase 1]: RESOLVED by 01-03 spike — live locator-rebind mechanics PROVEN on @playwright/test 1.60 (catch errors.TimeoutError, rebind via fresh page.locator, replay; chained Proxy re-wrap; assertions excluded; bounded timeout budget). Locked decisions in spike/FINDINGS.md feed plan 04. No remaining blockers.
 
 ## Deferred Items
 
@@ -88,6 +92,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-31T01:33:53.242Z
+Last session: 2026-05-31T01:41:35.795Z
 Stopped at: Completed 01-02-PLAN.md
 Resume file: None

@@ -29,8 +29,8 @@ Requirements for the initial release. v1 is locator healing only.
 
 ### Live Heal
 
-- [ ] **HEAL-01**: On an accepted match, the plugin rebinds the broken locator to the matched element so the test continues and passes
-- [ ] **HEAL-02**: Healing triggers only after Playwright's normal auto-wait and timeout, never on a transient poll miss
+- [x] **HEAL-01**: On an accepted match, the plugin rebinds the broken locator to the matched element so the test continues and passes
+- [x] **HEAL-02**: Healing triggers only after Playwright's normal auto-wait and timeout, never on a transient poll miss
 
 ### Reporting
 
@@ -92,8 +92,8 @@ Which phases cover which requirements. Populated during roadmap creation.
 | MATCH-02 | Phase 2 | Pending |
 | MATCH-03 | Phase 2 | Pending |
 | MATCH-04 | Phase 2 | Pending |
-| HEAL-01 | Phase 1 | Pending |
-| HEAL-02 | Phase 1 | Pending |
+| HEAL-01 | Phase 1 | Complete |
+| HEAL-02 | Phase 1 | Complete |
 | REP-01 | Phase 1 | Pending |
 | REP-02 | Phase 2 | Pending |
 | PRIV-01 | Phase 4 | Pending |
