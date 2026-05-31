@@ -223,15 +223,35 @@ export function wrapLocator(
   });
 }
 
-/** Compact, side-effect-free description of chain args for the store key. */
+/**
+ * Compact description of chain args for the store key.
+ *
+ * Serializable args render to a stable string (`"text"`, `{"hasText":"Save"}`)
+ * so a re-built identical chain re-derives the same baseline key. A
+ * non-serializable arg (circular object, `RegExp`, `Locator`, ...) has no
+ * stable serialization, so instead of collapsing it to `""` — which would let
+ * two genuinely-different refinements share one baseline identity and risk a
+ * heal matched against the wrong element's fingerprint (the CR-01 collision
+ * class) — we fold in a DISTINGUISHING token: its `typeof` plus a per-test
+ * monotonic index from {@link HealContext.nextStep}. Distinct non-serializable
+ * args within a test therefore get distinct tokens. Single-worker Phase 2 only:
+ * the index is per-run, not persisted across runs/workers (that is Phase 3).
+ */
 export function describeArgs(args: unknown[], nextStep: () => number): string {
-  try {
-    return args
-      .map((a) => (typeof a === "string" ? a : JSON.stringify(a) ?? ""))
-      .join(",");
-  } catch {
-    return "";
-  }
+  return args
+    .map((a) => {
+      if (typeof a === "string") return a;
+      try {
+        const json = JSON.stringify(a);
+        // `undefined`, a function, or a symbol stringify to `undefined` — treat
+        // those as non-serializable too so they cannot collapse together.
+        if (json !== undefined) return json;
+      } catch {
+        // Fall through to the distinguishing token below.
+      }
+      return `<${typeof a}#${nextStep()}>`;
+    })
+    .join(",");
 }
 
 /**
