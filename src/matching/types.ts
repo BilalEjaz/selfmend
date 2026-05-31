@@ -100,10 +100,9 @@ export interface ScoredCandidate {
  * - `no-candidates`: enumeration produced no candidates to score.
  * - `below-floor`: the best candidate scored under the conservative floor
  *   (this is the genuinely-gone / false-green guard, D-09 / T-02-01).
- * - `ambiguous`: reserved for the Phase 2 second-best margin gate; the top
- *   two candidates are too close to confidently pick a single winner. Phase 1
- *   does not yet emit this, but the contract reserves it so Phase 2 can add
- *   the margin reason without changing the type.
+ * - `ambiguous`: the second-best margin gate refused (D-01); the top two
+ *   candidates are within `margin` of each other, so a single winner cannot be
+ *   confidently chosen (the look-alike / duplicate-element guard, MATCH-03).
  */
 export type NoHealReason =
   | "no-fingerprint"
@@ -133,6 +132,12 @@ export type Decision =
       heal: false;
       /** Why the heal was refused. */
       reason: NoHealReason;
+      /**
+       * The top score seen across the scored candidates, surfaced on every
+       * refusal so the reporter can show how close the best match came (D-04).
+       * `null` when there were no candidates to score (`no-candidates`).
+       */
+      bestScore: number | null;
     };
 
 /**

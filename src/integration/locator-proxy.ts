@@ -312,7 +312,10 @@ async function actionOrHeal(
       score: score(fingerprint, candidate),
     }));
 
-    const decision = decide(scored, ctx.config.threshold);
+    const decision = decide(scored, {
+      floor: ctx.config.threshold,
+      margin: ctx.config.margin,
+    });
     if (!decision.heal) throw err; // below floor / no candidate -> re-throw original
 
     // Rebind = FRESH page.locator(newSelector) (cannot reuse an ElementHandle,
