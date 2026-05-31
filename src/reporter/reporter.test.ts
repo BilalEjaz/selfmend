@@ -4,14 +4,22 @@ import pc from "picocolors";
 import SelfmendReporter from "./reporter.js";
 import { HEAL_ATTACHMENT_NAME, type HealEvent } from "../integration/events.js";
 
-/** Build a TestResult-like object carrying heal attachments. */
+/**
+ * Build a TestResult-like object carrying heal attachments. The body is a tiny
+ * stub exposing `toString()` (all the reporter reads) so this stays a pure src
+ * unit test with no `@types/node`/`Buffer` dependency (CLAUDE.md: src stays
+ * node-free; Buffer-bearing reporter tests live in the Playwright runner).
+ */
 function resultWith(events: HealEvent[]) {
   return {
-    attachments: events.map((e) => ({
-      name: HEAL_ATTACHMENT_NAME,
-      contentType: "application/json",
-      body: Buffer.from(JSON.stringify(e)),
-    })),
+    attachments: events.map((e) => {
+      const json = JSON.stringify(e);
+      return {
+        name: HEAL_ATTACHMENT_NAME,
+        contentType: "application/json",
+        body: { toString: () => json },
+      };
+    }),
   };
 }
 
