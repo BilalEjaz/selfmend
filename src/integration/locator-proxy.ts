@@ -101,30 +101,45 @@ export interface HealContext {
   /** Stable test-file identity component for the store key. */
   testFile: string;
   /**
+   * File-rooted, stable test title (`testInfo.titlePath` joined) — the second
+   * component of the cross-run identity key (D-04). Together with `testFile` it
+   * scopes a selector's occurrence counter to one test.
+   */
+  testTitle: string;
+  /**
    * Bounded replay budget (ms). The real attempt keeps the user's configured
    * timeout (do not shorten auto-wait semantics); the replay is capped so a
    * flaky heal target cannot balloon the per-action wall-clock (FINDINGS (b)).
    */
   replayTimeoutMs: number;
   /**
-   * Per-TEST monotonic step source (CR-01). Called once per `wrapLocator` to
-   * stamp a distinct step into the baseline key, so two genuinely-different
-   * elements addressed by the SAME selector string at different points in a
-   * test get distinct baseline identities and cannot heal against each other's
-   * fingerprint. A single reused wrapped locator keeps one key for its whole
-   * lifetime (capture->heal correspondence). Single-worker Phase 1 only — no
-   * cross-run/parallel persistence (that is Phase 3).
+   * Per-TEST, per-CONTENT occurrence source (D-04/D-05). Called once per
+   * `wrapLocator` with the content identity (`testFile :: testTitle ::
+   * selector`); returns the 0-based Nth CREATION of that content within the
+   * test. Because the count depends only on how many times that selector was
+   * created earlier in the test — deterministic execution order, NOT whether the
+   * element resolved — the index is IDENTICAL on a green capture run and a later
+   * broken heal run (Pitfall 4). This makes the baseline key cross-run stable,
+   * which the Phase 1 run-order `step` counter never was. Reset per test (a new
+   * counter per test, like the old step counter).
    */
-  nextStep: () => number;
+  nextOccurrence: (contentKey: string) => number;
 }
 
 /**
- * Build a fresh per-test monotonic step counter (CR-01). Each call returns the
- * next integer starting at 0; a new counter (a new test) restarts at 0.
+ * Build a fresh per-test, per-content occurrence counter (D-04/D-05). Each call
+ * with a given content key returns the next 0-based index for THAT content; a
+ * new counter (a new test) restarts every content key at 0. Inserting an
+ * unrelated locator does not shift another content's indices (Pitfall 3),
+ * because each content key has its own independent count.
  */
-export function createStepCounter(): () => number {
-  let step = 0;
-  return () => step++;
+export function createOccurrenceCounter(): (contentKey: string) => number {
+  const counts = new Map<string, number>();
+  return (contentKey) => {
+    const n = counts.get(contentKey) ?? 0;
+    counts.set(contentKey, n + 1);
+    return n;
+  };
 }
 
 /** Detect a genuine post-auto-wait resolution timeout (FINDINGS (a) idiom). */
@@ -181,11 +196,23 @@ export function wrapLocator(
   selector: string,
   ctx: HealContext,
 ): Locator {
-  // Per-test monotonic step (CR-01): stamped ONCE per wrapped locator so two
-  // separate factory calls of the same selector string (two potentially
-  // different elements) get distinct baseline keys, while a single reused
-  // wrapped locator keeps one key across its capture->heal lifetime.
-  const key = ctx.store.identify(selector, ctx.testFile, ctx.nextStep());
+  // Occurrence key (D-04/D-05): stamped ONCE per wrapped locator at CREATION
+  // time. The occurrence index counts how many times this (file, title,
+  // selector) content was created earlier in the test, so two separate factory
+  // calls of the same selector get distinct keys, while a single reused wrapped
+  // locator keeps one key across its capture->heal lifetime — and the sequence
+  // is identical on a green run and a later broken run (the element need not
+  // resolve to be counted). Mark the key seen so the reporter's prune knows it
+  // was executed even if no fingerprint is ever captured for it (D-09).
+  const contentKey = `${ctx.testFile} ${ctx.testTitle} ${selector}`;
+  const occurrence = ctx.nextOccurrence(contentKey);
+  const key = ctx.store.identify(
+    selector,
+    ctx.testFile,
+    ctx.testTitle,
+    occurrence,
+  );
+  ctx.store.markSeen(key);
 
   return new Proxy(realLocator, {
     get(target, prop, receiver) {
@@ -210,7 +237,7 @@ export function wrapLocator(
           );
           // Re-wrap with a selector that records the chained refinement, so the
           // baseline key stays distinct from the parent locator's.
-          const chainedSelector = `${selector} >> ${prop}(${describeArgs(args, ctx.nextStep)})`;
+          const chainedSelector = `${selector} >> ${prop}(${describeArgs(args, ctx.nextOccurrence)})`;
           return wrapLocator(next, chainedSelector, ctx);
         };
       }
@@ -234,10 +261,14 @@ export function wrapLocator(
  * heal matched against the wrong element's fingerprint (the CR-01 collision
  * class) — we fold in a DISTINGUISHING token: its `typeof` plus a per-test
  * monotonic index from {@link HealContext.nextStep}. Distinct non-serializable
- * args within a test therefore get distinct tokens. Single-worker Phase 2 only:
- * the index is per-run, not persisted across runs/workers (that is Phase 3).
+ * args within a test therefore get distinct tokens. The index is a per-test
+ * occurrence count under a fixed content key, so it is deterministic within the
+ * test (the same reason the main occurrence key is cross-run stable, D-05).
  */
-export function describeArgs(args: unknown[], nextStep: () => number): string {
+export function describeArgs(
+  args: unknown[],
+  nextOccurrence: (contentKey: string) => number,
+): string {
   return args
     .map((a) => {
       if (typeof a === "string") return a;
@@ -249,7 +280,11 @@ export function describeArgs(args: unknown[], nextStep: () => number): string {
       } catch {
         // Fall through to the distinguishing token below.
       }
-      return `<${typeof a}#${nextStep()}>`;
+      // A non-serializable arg has no stable serialization: fold in a
+      // per-content occurrence index under a fixed pseudo-content key so two
+      // distinct non-serializable args within a test get distinct tokens (LO-02)
+      // without colliding with real selector content keys.
+      return `<${typeof a}#${nextOccurrence(" describeArgs:" + typeof a)}>`;
     })
     .join(",");
 }

@@ -5,7 +5,7 @@ import type { SelfmendConfig } from "../config/schema.js";
 import { BaselineStore } from "../store/store.js";
 import {
   wrapLocator,
-  createStepCounter,
+  createOccurrenceCounter,
   type HealContext,
 } from "./locator-proxy.js";
 
@@ -108,21 +108,26 @@ export const healingFixture = base.extend<
 
   // Override the built-in page: return a Proxy whose locators heal.
   page: async ({ page, selfmendConfig, selfmendStore }, use, testInfo) => {
-    // One monotonic step counter PER TEST (CR-01): shared across every wrapped
-    // locator (and chained re-wrap) in this test so distinct factory calls of
-    // the same selector string get distinct baseline keys.
-    const nextStep = createStepCounter();
+    // One per-content occurrence counter PER TEST (D-04/D-05): shared across
+    // every wrapped locator (and chained re-wrap) in this test so distinct
+    // factory calls of the same selector get distinct baseline keys, while the
+    // index for the Nth use of a selector is identical on capture and heal runs.
+    const nextOccurrence = createOccurrenceCounter();
+    // File-rooted, stable test title (D-04). titlePath is [file, ...describes,
+    // test] — joining it scopes the occurrence key to this exact test.
+    const testTitle = testInfo.titlePath.join(" > ");
     const wrapped = wrapPage(page, () => ({
       page,
       store: selfmendStore,
       config: selfmendConfig,
       testInfo,
       testFile: testInfo.file,
+      testTitle,
       // Bounded replay budget: cap so a flaky heal target cannot balloon the
       // per-action wall-clock (FINDINGS (b)). Mirror the configured action
       // timeout, falling back to a safe fixed cap.
       replayTimeoutMs: testInfo.timeout > 0 ? Math.min(testInfo.timeout, 5000) : 5000,
-      nextStep,
+      nextOccurrence,
     }));
     await use(wrapped);
   },
