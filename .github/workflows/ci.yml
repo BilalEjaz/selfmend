@@ -74,16 +74,17 @@ jobs:
 
       # Publish-surface validation runs ONCE (latest node + latest Playwright)
       # to cut redundant noise — it is version-independent of the matrix legs.
-      # attw reports an EXPECTED node10 "skull" on the ./reporter subpath
-      # (legacy node10 cannot resolve exports subpaths; engines.node>=22 makes
-      # this irrelevant). Only a non-node10 row regressing is a real failure.
+      # lint:types (scripts/check-types.mjs) ignores ONLY the EXPECTED node10
+      # skull on the ./reporter subpath (legacy node10 cannot resolve exports
+      # subpaths; engines.node>=22 makes it irrelevant) so it is a clean
+      # green/red gate; any non-node10 regression still fails it.
       - name: Lint package surface (publint)
         if: matrix.node == 24 && matrix.playwright == '1.60.0'
-        run: npx publint
+        run: npm run lint:pack
 
       - name: Lint type resolution (attw)
         if: matrix.node == 24 && matrix.playwright == '1.60.0'
-        run: npx @arethetypeswrong/cli --pack
+        run: npm run lint:types
 
       - name: Pack dry-run (tarball surface)
         if: matrix.node == 24 && matrix.playwright == '1.60.0'

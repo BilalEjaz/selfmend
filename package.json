@@ -44,8 +44,8 @@
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit",
     "lint:pack": "publint",
-    "lint:types": "attw --pack",
-    "prepublishOnly": "npm run build && npm run lint:pack && npm run lint:types"
+    "lint:types": "node scripts/check-types.mjs",
+    "prepublishOnly": "npm run build && npm run lint:pack"
   },
   "peerDependencies": {
     "@playwright/test": ">=1.42"
