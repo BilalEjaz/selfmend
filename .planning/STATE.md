@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 2 context gathered
-last_updated: "2026-05-31T03:11:29.561Z"
-last_activity: 2026-05-31 -- Phase 2 planning complete
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-05-31T03:28:34.216Z"
+last_activity: 2026-05-31
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 7
-  completed_plans: 5
+  completed_plans: 6
   percent: 25
 ---
 
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-31)
 
 **Core value:** When a test fails only because a selector changed (not because the app is actually broken), the suite keeps running and tells the team exactly what changed, without any data leaving their CI.
-**Current focus:** Phase 2 — trust hardening
+**Current focus:** Phase 02 — Trust Hardening
 
 ## Current Position
 
-Phase: 2
-Plan: Not started
+Phase: 02 (Trust Hardening) — EXECUTING
+Plan: 2 of 2
 Status: Ready to execute
-Last activity: 2026-05-31 -- Phase 2 planning complete
+Last activity: 2026-05-31
 
-Progress: [██████████] 100% (Phase 1 plans)
+Progress: [█████████░] 86%
 
 ## Performance Metrics
 
@@ -57,6 +57,7 @@ Progress: [██████████] 100% (Phase 1 plans)
 | Phase 01 P03 | 7 | 2 tasks | 3 files |
 | Phase 01 P04 | 7 | 3 tasks | 10 files |
 | Phase 01 P05 | 3 | 3 tasks | 8 files |
+| Phase 02 P01 | 5 | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -80,6 +81,8 @@ Recent decisions affecting current work:
 - [Phase ?]: [01-04]: throwaway rebind spike consumed + deleted; FINDINGS contract now realized in src/integration (Proxy method partition, two-budget timeout, fresh page.locator rebind)
 - [Phase ?]: [01-05]: reporter is summary-only by construction (D-05) — reads selfmend-heal attachments in the main process, no page/DOM access, cannot rebind; heal/report trust boundary kept disjoint
 - [Phase ?]: [01-05]: public selfmend entry re-exports healingFixture as test + expect unchanged (D-02/D-03 one-line swap); named-only exports + selfmend/reporter subpath so import/require resolve without .default; REP-02 margin column deferred to Phase 2 (D-07)
+- [Phase ?]: [02-01]: margin gate is an absolute second-best gap with an inclusive >= boundary (epsilon-guarded against float drift); floor checked before margin so two below-floor candidates report below-floor not ambiguous (D-01, D-03)
+- [Phase ?]: [02-01]: weight-ordering invariant pinned relatively (identity > structure by >0.05) against fixed SIGNAL_WEIGHTS, scorer untouched (D-09); global margin config key default 0.05, threshold unchanged (D-07, D-08)
 
 ### Pending Todos
 
@@ -99,6 +102,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-31T02:54:03.544Z
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-trust-hardening/02-CONTEXT.md
+Last session: 2026-05-31T03:28:34.205Z
+Stopped at: Completed 02-01-PLAN.md
+Resume file: None

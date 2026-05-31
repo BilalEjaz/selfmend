@@ -23,8 +23,8 @@ Requirements for the initial release. v1 is locator healing only.
 ### Matching & Heal Decision
 
 - [x] **MATCH-01**: When a locator fails to resolve, the plugin enumerates candidate elements and scores each against the stored fingerprint using weighted signals
-- [ ] **MATCH-02**: A heal is accepted only when the top candidate's score clears an absolute confidence floor
-- [ ] **MATCH-03**: A heal is accepted only when the top candidate beats the second-best candidate by a configurable margin, preventing ambiguous matches
+- [x] **MATCH-02**: A heal is accepted only when the top candidate's score clears an absolute confidence floor
+- [x] **MATCH-03**: A heal is accepted only when the top candidate beats the second-best candidate by a configurable margin, preventing ambiguous matches
 - [ ] **MATCH-04**: When no candidate clears both gates, the plugin does not heal and the locator fails normally (no false greens)
 
 ### Live Heal
@@ -44,7 +44,7 @@ Requirements for the initial release. v1 is locator healing only.
 ### Configuration
 
 - [x] **CFG-01**: User can toggle healing on or off via plugin config
-- [ ] **CFG-02**: User can configure the confidence floor and the margin gate
+- [x] **CFG-02**: User can configure the confidence floor and the margin gate
 
 ## v2 Requirements
 
@@ -89,8 +89,8 @@ Which phases cover which requirements. Populated during roadmap creation.
 | CAP-02 | Phase 3 | Pending |
 | CAP-03 | Phase 3 | Pending |
 | MATCH-01 | Phase 1 | Complete |
-| MATCH-02 | Phase 2 | Pending |
-| MATCH-03 | Phase 2 | Pending |
+| MATCH-02 | Phase 2 | Complete |
+| MATCH-03 | Phase 2 | Complete |
 | MATCH-04 | Phase 2 | Pending |
 | HEAL-01 | Phase 1 | Complete |
 | HEAL-02 | Phase 1 | Complete |
@@ -98,7 +98,7 @@ Which phases cover which requirements. Populated during roadmap creation.
 | REP-02 | Phase 2 | Pending |
 | PRIV-01 | Phase 4 | Pending |
 | CFG-01 | Phase 1 | Complete |
-| CFG-02 | Phase 2 | Pending |
+| CFG-02 | Phase 2 | Complete |
 
 **Coverage:**
 - v1 requirements: 16 total

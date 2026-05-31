@@ -49,7 +49,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. The console summary clearly distinguishes healed locators from failed-to-heal ones, showing confidence and runner-up margin per heal
   5. User can configure the confidence floor and the margin gate via plugin config
 **Plans**: 2 plans
-- [ ] 02-01-PLAN.md — Pure core + config: margin gate in decide(), bestScore on no-heal, weight ordering invariant, margin config key (TDD; MATCH-02, MATCH-03, CFG-02)
+- [x] 02-01-PLAN.md — Pure core + config: margin gate in decide(), bestScore on no-heal, weight ordering invariant, margin config key (TDD; MATCH-02, MATCH-03, CFG-02)
 - [ ] 02-02-PLAN.md — Refused-heal slice: SelfmendEvent tagged union, proxy attach-then-rethrow, reporter could-not-heal section, ambiguous-duplicate Playwright proof (MATCH-04, REP-02)
 
 ### Phase 3: Persistence & Parallel-Worker Safety
@@ -83,6 +83,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Thinnest Real Heal | 5/5 | Complete | 2026-05-31 |
-| 2. Trust Hardening | 0/TBD | Not started | - |
+| 2. Trust Hardening | 1/2 | In Progress|  |
 | 3. Persistence & Parallel-Worker Safety | 0/TBD | Not started | - |
 | 4. Offline Verification & Publish | 0/TBD | Not started | - |
