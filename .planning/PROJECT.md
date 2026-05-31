@@ -16,20 +16,23 @@ When a test fails only because a selector changed (not because the app is actual
 
 <!-- Shipped and confirmed valuable. -->
 
-(None yet, ship to validate)
+<!-- Validated in Phase 1 (Thinnest Real Heal), verified 2026-05-31. -->
+
+- ✓ Plugin installs into an existing Playwright project as an npm package (`selfmend`) with minimal config, via import-swap — Phase 1
+- ✓ On passing runs, the plugin captures an element fingerprint (text, role, test-id, attributes, neighbours, DOM position) for each resolved locator — Phase 1 (single-worker, in-process store; cross-run/parallel persistence is Phase 3)
+- ✓ When a locator fails to resolve, the plugin scores candidate elements against the stored fingerprint and selects the best match above a conservative (~0.9) confidence threshold — Phase 1
+- ✓ On a successful match, the plugin rebinds the locator live so the test continues and passes — Phase 1
+- ✓ When no candidate clears the threshold, the plugin does not force a heal and the test fails normally (no false greens) — Phase 1 (verified by control test)
+- ✓ At the end of a run, the plugin prints a boxed console summary of each heal (original selector, healed target, confidence) — Phase 1
+- ✓ Healing can be toggled on/off via plugin config — Phase 1
 
 ### Active
 
 <!-- Current scope. Building toward these. v1 = locator healing only. -->
 
-- [ ] Plugin installs into an existing Playwright project as an npm package with minimal config
-- [ ] On passing runs, the plugin captures an element fingerprint (text, role, test-id, attributes, neighbouring elements, DOM position) for each resolved locator and persists it to an internal baseline store
-- [ ] When a locator fails to resolve, the plugin scores candidate elements against the stored fingerprint and selects the best match above a confidence threshold
-- [ ] On a successful match, the plugin rebinds the locator live so the test continues and passes
-- [ ] When no candidate clears the confidence threshold, the plugin does not force a heal and the test fails normally (no false greens)
-- [ ] At the end of a run, the plugin prints a console summary listing each heal: original selector, healed target, and confidence score
-- [ ] The entire healing path runs offline with no API key, no network calls, and nothing sent to any external service
-- [ ] Healing behaviour can be toggled and tuned (on/off, confidence threshold) via plugin config
+- [ ] Hardened trust gates: configurable confidence floor + second-best margin gate (Phase 2)
+- [ ] Cross-run persistence and parallel-worker-safe baseline store (Phase 3)
+- [ ] The entire healing path proven fully offline by a network-blocked test (Phase 4); offline-by-construction already holds (no network/AI/telemetry deps)
 
 ### Out of Scope
 
@@ -89,4 +92,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-31 after initialization*
+*Last updated: 2026-05-31 after Phase 1 (Thinnest Real Heal) completion: end-to-end locator self-heal working on real Chromium, 36 unit + 16 integration tests green, code review clean.*
