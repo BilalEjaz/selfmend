@@ -33,11 +33,14 @@ When a test fails only because a selector changed (not because the app is actual
 - ✓ Parallel-worker safety: lock-free per-worker shards (`parallelIndex`) merged in the Reporter at end-of-run with Windows-safe atomic write; no corruption/lost writes under `workers>1` — Phase 3
 - ✓ Cross-run-stable identity key (testFile + titlePath + selector + occurrence), replacing the fragile run-order step counter; refresh-on-pass + opt-in (`SELFMEND_PRUNE`) complete-run-only prune — Phase 3
 
+- ✓ Entire healing path proven fully offline by a self-validating network-block test (asserts every patched egress surface trips, then zero egress through a real heal); offline-by-construction (no network/AI/telemetry deps) — Phase 4
+- ✓ Publish-ready 0.1.0: dual ESM/CJS validated (publint + attw), matrix CI (node 22/24 x Playwright 1.42/1.60), launch README, `npm publish --dry-run` green — Phase 4 (real publish is the maintainer's manual step per RELEASING.md)
+
 ### Active
 
 <!-- Current scope. Building toward these. v1 = locator healing only. -->
 
-- [ ] The entire healing path proven fully offline by a network-blocked test, then first npm publish (Phase 4); offline-by-construction already holds (no network/AI/telemetry deps)
+(All v1 requirements validated. v1 milestone complete. Remaining: human pushes to GitHub to run the CI matrix, then runs the real `npm publish` per RELEASING.md.)
 
 ### Out of Scope
 
@@ -97,4 +100,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-31 after Phase 3 (Persistence & Parallel-Worker Safety) completion: committed versioned baseline.json survives across runs, lock-free per-worker shards merged in the Reporter (Windows-safe atomic write), cross-run-stable occurrence key, opt-in complete-run-only prune. 125 unit + 21 integration tests green, code review clean. Only Phase 4 (offline proof + npm publish) remains.*
+*Last updated: 2026-05-31 after Phase 4 (Offline Verification & Publish) completion — v1 MILESTONE COMPLETE. All 16 v1 requirements validated across 4 phases. selfmend@0.1.0 is publish-ready (npm publish --dry-run green, publint + attw clean, dist-only tarball); 125 unit + 23 integration tests green; 4 code reviews clean. Remaining human steps (tracked in 04-HUMAN-UAT.md): push to GitHub to run the CI matrix (proves the >=1.42 floor), then run the real `npm publish` per RELEASING.md.*
