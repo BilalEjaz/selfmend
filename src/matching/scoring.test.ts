@@ -156,6 +156,51 @@ describe("score", () => {
     }
   });
 
+  it("ranks an identity-preserving candidate above a structure-only one by more than the default margin (weight ordering invariant, D-09)", () => {
+    // This invariant is what lets Plan 02's margin gate (default 0.05)
+    // distinguish a TRUE heal from a structural also-ran: a candidate that
+    // keeps the element's identity (testId + role + text) must out-score one
+    // that merely shares the structural shell (tag/ordinal/parentTag) by a gap
+    // the gate can act on. Asserted RELATIVELY (ordering + >0.05 gap), never by
+    // exact magic numbers, so SIGNAL_WEIGHTS can re-tune without breaking this.
+    const fp = fingerprint({
+      tag: "button",
+      role: "button",
+      text: "Submit order",
+      testId: "submit-btn",
+      ordinal: 2,
+      parentTag: "form",
+    });
+
+    // Keeps identity (testId/role/text); only volatile structure drifts.
+    const identity = candidate({
+      tag: "span", // drifted tag
+      role: "button",
+      text: "Submit order",
+      testId: "submit-btn",
+      ordinal: 9, // drifted ordinal
+      parentTag: "div", // drifted parent
+    });
+
+    // Keeps only the structural shell; identity signals all differ.
+    const structure = candidate({
+      tag: "button",
+      role: "link", // different role
+      text: "Cancel subscription", // different text
+      testId: "cancel-link", // different testId
+      ordinal: 2, // same ordinal
+      parentTag: "form", // same parent
+    });
+
+    const sIdentity = score(fp, identity);
+    const sStructure = score(fp, structure);
+
+    expect(sIdentity).toBeGreaterThan(sStructure);
+    // The gap must exceed the default margin so a real heal among structural
+    // look-alikes clears the gate (DEFAULT_MARGIN = 0.05).
+    expect(sIdentity - sStructure).toBeGreaterThan(0.05);
+  });
+
   it("uses normalized text similarity, not raw equality, so minor drift still scores partial", () => {
     // Identical on everything except a tiny text drift. The text sub-score
     // must be partial (not 0), so a small drift scores HIGHER than a total
