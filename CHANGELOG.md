@@ -10,6 +10,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > in a breaking way between minor releases (per SemVer, anything is allowed
 > pre-1.0). Such changes will always be called out in this changelog.
 
+## [0.1.1] - 2026-06-01
+
+### Fixed
+
+- Restored `@playwright/test` compatibility down to the declared `>=1.42` floor.
+  The wrapped-locator Proxy now passes `constructor` through unbound, so
+  `expect()` on Playwright `<= 1.59` (which detects a Locator via
+  `receiver.constructor.name === "Locator"`, where 1.60 switched to
+  `receiver._apiName`) accepts a wrapped locator. Previously
+  `expect(page.locator(...))` threw `"X can be only used with Locator object"`
+  on those versions. Proven by the CI matrix across 1.42, 1.49, and 1.60.
+
+### Changed
+
+- README: removed em dashes and added a plain-English explanation of the
+  `threshold` (confidence floor) and `margin` (runner-up gap) settings, with
+  worked examples.
+- npm metadata: added discoverability keywords and cleaned the package
+  description.
+
 ## [0.1.0] - 2026-05-31
 
 First public release. `selfmend` heals broken Playwright locators fully offline,

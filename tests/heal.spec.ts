@@ -47,9 +47,12 @@ test("HEAL-01: a broken-but-present selector heals after timeout and the test st
   await submit.click({ timeout: 1200 });
 
   // The healed element is the same semantic Submit button.
+  // (Assert with matchers available on the declared floor; `toHaveRole`
+  // landed in PW 1.50, so use tag + text, which work on >=1.42.)
   const healed = page.locator('[data-testid="submit-btn"]');
   await expect(healed).toHaveText("Submit");
-  await expect(healed).toHaveRole("button");
+  await expect(healed).toBeVisible();
+  await expect(healed).toHaveJSProperty("tagName", "BUTTON");
 
   // A heal event was attached (worker -> main transport for the report).
   const healAttachments = testInfo.attachments.filter(

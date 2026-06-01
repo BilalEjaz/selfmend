@@ -34,14 +34,11 @@ jobs:
         # (Windows / noble coverage can be added post-v1.)
         os: [ubuntu-22.04]
         node: [22, 24]
-        # Declared floor = 1.60 (current latest). Playwright <= 1.49's expect()
-        # rejects selfmend's wrapped-locator Proxy ("X can be only used with
-        # Locator object"), which would break expect(page.locator(...)) for
-        # those users; 1.60 accepts it. Honest-floor rule (RELEASING.md):
-        # declare only what CI proves green. Widening the floor (a Locator
-        # brand shim on the Proxy, or probing intermediate minors) is a 0.1.x
-        # follow-up — add candidate versions here and lower the floor only once green.
-        playwright: ["1.60.0"]
+        # Declared floor = 1.42. The wrapped-locator Proxy now passes `constructor`
+        # through unbound, so older expect() (which checks `receiver.constructor.name`;
+        # 1.60 switched to `_apiName`) accepts it. CI proves the floor, latest, and a
+        # mid point. Honest-floor rule (RELEASING.md): declare only what CI proves green.
+        playwright: ["1.42.0", "1.49.1", "1.60.0"]
     steps:
       - uses: actions/checkout@v4
 

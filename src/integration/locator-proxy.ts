@@ -242,6 +242,13 @@ export function wrapLocator(
         };
       }
 
+      // `constructor` must pass through UNBOUND. Older Playwright's expect()
+      // detects a Locator via `receiver.constructor.name === "Locator"`
+      // (1.60 switched to `receiver._apiName`). Binding the constructor makes
+      // its `.name` become "bound Locator", so expect() on <= 1.59 would reject
+      // the wrapped locator ("X can be only used with Locator object").
+      if (prop === "constructor") return value;
+
       // Passthrough: properties, page(), count, evaluate, and (critically) the
       // surface the assertion matchers read. Bind so `this` stays the real
       // Locator.

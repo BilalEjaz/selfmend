@@ -25,7 +25,7 @@ pnpm add -D selfmend
 npm add -D @playwright/test   # if you don't have it yet
 ```
 
-Requires Node `>=22` and `@playwright/test >=1.60` (tested in CI against 1.60; wider back-compat is a planned 0.1.x follow-up).
+Requires Node `>=22` and `@playwright/test >=1.42` (tested in CI against 1.42, 1.49, and 1.60).
 
 ## The one-line import swap
 
@@ -210,9 +210,8 @@ A `.gitignore` that matches this workflow:
 
 - **Locator healing only.** No assertion healing, no smart-wait insertion, and
   no LLM-based tiebreaker. Only locator *actions* heal.
-- **Playwright only.** Requires `@playwright/test >=1.60` (tested in CI against
-  1.60; wider back-compat is a planned 0.1.x follow-up). No other test framework
-  is supported in v1.
+- **Playwright only.** Requires `@playwright/test >=1.42` (tested in CI against
+  1.42, 1.49, and 1.60). No other test framework is supported in v1.
 - **Occurrence index is creation-order sensitive.** A locator's baseline key
   includes an occurrence index that counts chained-method invocations within a
   test. If the heal run takes a different code path than the capture run (a

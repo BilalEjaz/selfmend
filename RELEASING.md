@@ -99,20 +99,20 @@ Also confirm the package page renders on https://www.npmjs.com/package/selfmend
 
 ## Playwright compatibility floor — honest-floor rule
 
-`package.json` declares `peerDependencies["@playwright/test"]: ">=1.60"`,
-proven by the CI **matrix** (`node 22/24 × playwright 1.60.0`).
+`package.json` declares `peerDependencies["@playwright/test"]: ">=1.42"`,
+proven by the CI **matrix** (`node 22/24 × playwright 1.42.0/1.49.1/1.60.0`).
 
-The floor started at `1.42`, but the CI matrix surfaced a real incompatibility:
-on Playwright `1.42` AND `1.49`, `expect()`'s stricter Locator detection rejects
-selfmend's wrapped-locator Proxy (`"toBeVisible can be only used with Locator
-object"`), which would break `expect(page.locator(...))` for those users — not
-just our tests. `1.60` accepts the Proxy. Per the honest-floor rule we declare
-only what CI proves green, so the floor is `1.60` for 0.1.0.
+History: `0.1.0` briefly shipped a `1.60` floor. The CI matrix had surfaced that
+on Playwright `<= 1.59`, `expect()` detects a Locator via
+`receiver.constructor.name === "Locator"` (1.60 switched to `receiver._apiName`),
+and selfmend's wrapped-locator Proxy was binding every function property to the
+target, so `constructor.name` came back as `"bound Locator"` and `expect()`
+rejected it. `0.1.1` fixes this by passing `constructor` through unbound, which
+restores the original `1.42` floor (proven green across the matrix).
 
-Widening the floor is a tracked 0.1.x follow-up: either add a Locator brand
-shim so older `expect()` accepts the Proxy, or probe intermediate minors
-(1.50–1.59) in the matrix. Lower the declared floor only once that version is
-green in CI.
+Honest-floor rule: declare only what CI proves green. If a future floor leg
+fails, raise the declared `peerDependencies` floor (and the README) to the
+lowest version that passes, then re-run the pre-flight and publish.
 
 **Before the first publish, confirm the matrix is green on the declared floor.**
 If a future floor leg fails, do the same: raise the declared `peerDependencies`
