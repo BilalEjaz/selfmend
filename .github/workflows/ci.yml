@@ -29,15 +29,17 @@ jobs:
       # does not mask the compatibility picture across the whole matrix.
       fail-fast: false
       matrix:
-        # ubuntu-22.04 (jammy) for v1: Playwright 1.42's `--with-deps` apt list
-        # references pre-noble package names, so the floor leg fails to install
-        # browser deps on ubuntu-latest (24.04/noble). Jammy installs both 1.42
-        # and 1.60 deps cleanly, so the >=1.42 floor is honestly proven.
+        # ubuntu-22.04 (jammy): older Playwright lines install browser system
+        # deps cleanly here (1.42's --with-deps apt list predates noble/24.04).
         # (Windows / noble coverage can be added post-v1.)
         os: [ubuntu-22.04]
         node: [22, 24]
-        # declared peer floor + latest stable.
-        playwright: ["1.42.0", "1.60.0"]
+        # Declared peer floor + latest stable. The floor is 1.49, not 1.42:
+        # on 1.42, expect()'s stricter Locator detection rejects selfmend's
+        # wrapped-locator Proxy ("X can be only used with Locator object"),
+        # which would break expect(page.locator(...)) for real 1.42 users.
+        # Honest-floor rule (RELEASING.md): declare only what CI proves green.
+        playwright: ["1.49.1", "1.60.0"]
     steps:
       - uses: actions/checkout@v4
 
