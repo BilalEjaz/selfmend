@@ -1,7 +1,20 @@
 {
   "name": "selfmend",
   "version": "0.1.0",
-  "description": "Self-healing Playwright locators that run fully offline inside your own CI — no API key, no telemetry, no false-green tests.",
+  "description": "Self-healing Playwright locators that run fully offline inside your own CI: no API key, no telemetry, no false-green tests.",
+  "keywords": [
+    "playwright",
+    "playwright-test",
+    "self-healing",
+    "selfhealing",
+    "locators",
+    "testing",
+    "e2e",
+    "end-to-end",
+    "flaky-tests",
+    "test-automation",
+    "offline"
+  ],
   "license": "MIT",
   "type": "module",
   "engines": {
