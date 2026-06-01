@@ -29,9 +29,12 @@ jobs:
       # does not mask the compatibility picture across the whole matrix.
       fail-fast: false
       matrix:
-        # ubuntu-latest only for v1. The atomicWrite path is Windows-specific;
-        # add windows-latest here if Windows CI coverage is wanted before push.
-        os: [ubuntu-latest]
+        # ubuntu-22.04 (jammy) for v1: Playwright 1.42's `--with-deps` apt list
+        # references pre-noble package names, so the floor leg fails to install
+        # browser deps on ubuntu-latest (24.04/noble). Jammy installs both 1.42
+        # and 1.60 deps cleanly, so the >=1.42 floor is honestly proven.
+        # (Windows / noble coverage can be added post-v1.)
+        os: [ubuntu-22.04]
         node: [22, 24]
         # declared peer floor + latest stable.
         playwright: ["1.42.0", "1.60.0"]
