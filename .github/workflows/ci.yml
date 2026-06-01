@@ -34,12 +34,14 @@ jobs:
         # (Windows / noble coverage can be added post-v1.)
         os: [ubuntu-22.04]
         node: [22, 24]
-        # Declared peer floor + latest stable. The floor is 1.49, not 1.42:
-        # on 1.42, expect()'s stricter Locator detection rejects selfmend's
-        # wrapped-locator Proxy ("X can be only used with Locator object"),
-        # which would break expect(page.locator(...)) for real 1.42 users.
-        # Honest-floor rule (RELEASING.md): declare only what CI proves green.
-        playwright: ["1.49.1", "1.60.0"]
+        # Declared floor = 1.60 (current latest). Playwright <= 1.49's expect()
+        # rejects selfmend's wrapped-locator Proxy ("X can be only used with
+        # Locator object"), which would break expect(page.locator(...)) for
+        # those users; 1.60 accepts it. Honest-floor rule (RELEASING.md):
+        # declare only what CI proves green. Widening the floor (a Locator
+        # brand shim on the Proxy, or probing intermediate minors) is a 0.1.x
+        # follow-up — add candidate versions here and lower the floor only once green.
+        playwright: ["1.60.0"]
     steps:
       - uses: actions/checkout@v4
 

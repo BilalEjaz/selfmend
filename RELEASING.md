@@ -99,15 +99,20 @@ Also confirm the package page renders on https://www.npmjs.com/package/selfmend
 
 ## Playwright compatibility floor — honest-floor rule
 
-`package.json` declares `peerDependencies["@playwright/test"]: ">=1.49"`,
-proven by the CI **matrix** (`node 22/24 × playwright 1.49.1/1.60.0`).
+`package.json` declares `peerDependencies["@playwright/test"]: ">=1.60"`,
+proven by the CI **matrix** (`node 22/24 × playwright 1.60.0`).
 
-The original `1.42` floor was dropped after the CI matrix showed a real
-incompatibility: on Playwright `1.42`, `expect()`'s stricter Locator detection
-rejects selfmend's wrapped-locator Proxy (`"toBeVisible can be only used with
-Locator object"`), which would break `expect(page.locator(...))` for actual
-`1.42` users — not just our tests. Per the honest-floor rule we declare only
-what CI proves green, so the floor was raised to `1.49`.
+The floor started at `1.42`, but the CI matrix surfaced a real incompatibility:
+on Playwright `1.42` AND `1.49`, `expect()`'s stricter Locator detection rejects
+selfmend's wrapped-locator Proxy (`"toBeVisible can be only used with Locator
+object"`), which would break `expect(page.locator(...))` for those users — not
+just our tests. `1.60` accepts the Proxy. Per the honest-floor rule we declare
+only what CI proves green, so the floor is `1.60` for 0.1.0.
+
+Widening the floor is a tracked 0.1.x follow-up: either add a Locator brand
+shim so older `expect()` accepts the Proxy, or probe intermediate minors
+(1.50–1.59) in the matrix. Lower the declared floor only once that version is
+green in CI.
 
 **Before the first publish, confirm the matrix is green on the declared floor.**
 If a future floor leg fails, do the same: raise the declared `peerDependencies`
