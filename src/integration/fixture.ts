@@ -1,4 +1,4 @@
-import { test as base, type Page, type Locator } from "@playwright/test";
+import { test as base } from "@playwright/test";
 
 import { defaultConfig } from "../config/defaults.js";
 import type { SelfmendConfig } from "../config/schema.js";
@@ -8,17 +8,13 @@ import {
   writeShard,
   shardPath,
 } from "../store/persistence.js";
-import {
-  wrapLocator,
-  createOccurrenceCounter,
-  describeArgs,
-  type HealContext,
-} from "./locator-proxy.js";
+import { describeArgs } from "./locator-proxy.js";
 import {
   attachHealEvent,
   attachRefusedEvent,
   type SelfmendEvent,
 } from "./events.js";
+import { wrapPage } from "./wrap-page.js";
 
 /**
  * The page-override healing fixture (INST-02, D-03, D-04, D-08).
@@ -83,38 +79,6 @@ export function buildPageSelector(
 }
 
 /**
- * Wrap a real `page` so its locator-factory methods return healing-aware
- * Locators. Non-factory members pass straight through to the real page. The
- * shared per-test `nextOccurrence` is threaded into the hardened arg
- * stringifier (IN-02) so non-serializable factory args stay collision-distinct.
- */
-function wrapPage(
-  realPage: Page,
-  nextOccurrence: (contentKey: string) => number,
-  makeCtx: () => HealContext,
-): Page {
-  return new Proxy(realPage, {
-    get(target, prop, receiver) {
-      const value = Reflect.get(target, prop, receiver) as unknown;
-      if (typeof value !== "function") return value;
-
-      if (typeof prop === "string" && PAGE_LOCATOR_FACTORIES.has(prop)) {
-        return (...args: unknown[]): Locator => {
-          const real = (value as (...a: unknown[]) => Locator).apply(
-            target,
-            args,
-          );
-          const selector = buildPageSelector(prop, args, nextOccurrence);
-          return wrapLocator(real, selector, makeCtx());
-        };
-      }
-
-      return (value as (...a: unknown[]) => unknown).bind(target);
-    },
-  });
-}
-
-/**
  * The composable healing fixture. Merge into your own `test.extend`, or use the
  * `test` re-exported by the package entry (plan 05) for zero-config healing.
  */
@@ -153,21 +117,24 @@ export const healingFixture = base.extend<
     { scope: "worker" },
   ],
 
-  // Override the built-in page: return a Proxy whose locators heal.
+  // Override the built-in page: return the BARE wrapped page from the shared
+  // runner-agnostic core (WRAP-04). The fixture is now ONE THIN ADAPTER over the
+  // public `wrapPage` — a single code path, no parallel proxy/heal copy — that
+  // supplies the two @playwright/test-specific seams:
+  //
+  //   - `scope` maps the live identity to (suite = testInfo.file, test =
+  //     file-rooted titlePath), EXACTLY as the pre-refactor testFile/testTitle,
+  //     so the store keys `suite :: test :: selector :: occurrence` are
+  //     BYTE-IDENTICAL and committed baselines keep matching (D-09).
+  //   - `onHeal` (the core's emit sink) maps each SelfmendEvent back onto the
+  //     EXISTING testInfo.attach transport (attachHealEvent / attachRefusedEvent
+  //     keyed on `event.kind`), so the `selfmend-heal` attachment name and bodies
+  //     stay byte-identical (D-08). A missing kind is a healed event (back-compat).
+  //
+  // The core's own `wrapPage` builds the per-test occurrence counter, the
+  // auto-resetting scope-lifetime controller, and the locator-proxy heal loop;
+  // the fixture no longer owns any of that (WRAP-04 single source of truth).
   page: async ({ page, selfmendConfig, selfmendStore }, use, testInfo) => {
-    // One per-content occurrence counter PER TEST (D-04/D-05): shared across
-    // every wrapped locator (and chained re-wrap) in this test so distinct
-    // factory calls of the same selector get distinct baseline keys, while the
-    // index for the Nth use of a selector is identical on capture and heal runs.
-    const nextOccurrence = createOccurrenceCounter();
-    // File-rooted, stable test title (D-04). titlePath is [file, ...describes,
-    // test] — joining it scopes the occurrence key to this exact test.
-    const testTitle = testInfo.titlePath.join(" > ");
-    // The @playwright/test adapter for the pluggable `emit` seam (D-08): map the
-    // SelfmendEvent union back onto the EXISTING testInfo.attach transport, so
-    // keys and attachments stay byte-identical to the pre-refactor proxy
-    // (WRAP-04 zero behaviour change). `kind` discriminates the two arms; a
-    // missing kind is a healed event (back-compat).
     const emit = async (event: SelfmendEvent): Promise<void> => {
       if (event.kind === "refused") {
         await attachRefusedEvent(testInfo, event);
@@ -175,21 +142,23 @@ export const healingFixture = base.extend<
         await attachHealEvent(testInfo, event);
       }
     };
-    const wrapped = wrapPage(page, nextOccurrence, () => ({
-      page,
+    const wrapped = wrapPage(page, {
       store: selfmendStore,
       config: selfmendConfig,
-      emit,
+      onHeal: emit,
       // D-09 adapter mapping: suite = testInfo.file, test = file-rooted title,
-      // EXACTLY as the old testFile/testTitle, so committed baselines match.
-      suite: testInfo.file,
-      test: testTitle,
+      // read LIVE per locator creation (constant within one test) — EXACTLY the
+      // old testFile/testTitle so committed baselines and keys are byte-identical.
+      scope: () => ({
+        suite: testInfo.file,
+        test: testInfo.titlePath.join(" > "),
+      }),
       // Bounded replay budget: cap so a flaky heal target cannot balloon the
       // per-action wall-clock (FINDINGS (b)). Mirror the configured action
-      // timeout, falling back to a safe fixed cap.
-      replayTimeoutMs: testInfo.timeout > 0 ? Math.min(testInfo.timeout, 5000) : 5000,
-      nextOccurrence,
-    }));
+      // timeout, falling back to a safe fixed cap — identical to before.
+      replayTimeoutMs:
+        testInfo.timeout > 0 ? Math.min(testInfo.timeout, 5000) : 5000,
+    });
     await use(wrapped);
   },
 });

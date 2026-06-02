@@ -158,6 +158,16 @@ export interface WrapPageOptions {
    * this from the page URL.
    */
   scope?: ScopeSource;
+  /**
+   * Optional bounded replay budget (ms) — the cap on a HEALED action's replay
+   * (the real attempt always keeps the caller's own timeout). Omit it and the
+   * raw-mode default {@link RAW_REPLAY_TIMEOUT_MS} applies. The `@playwright/test`
+   * adapter (the fixture) passes its `Math.min(testInfo.timeout, 5000)` value
+   * through here so the fixture's per-action wall-clock budget stays byte-identical
+   * to the pre-refactor proxy (WRAP-04 zero behaviour change). Not part of the
+   * documented public surface for raw adopters — it exists for the adapter.
+   */
+  replayTimeoutMs?: number;
 }
 
 /**
@@ -193,6 +203,9 @@ const CONTROLLERS = new WeakMap<object, ScopeController>();
 export function wrapPage(page: Page, opts: WrapPageOptions): Page {
   const config = resolveConfig(opts.config);
   const controller = createScopeController(opts.scope);
+  // The replay cap: the adapter (fixture) supplies its mirror of the test
+  // timeout; raw adopters fall back to the fixed raw-mode budget (D-08).
+  const replayTimeoutMs = opts.replayTimeoutMs ?? RAW_REPLAY_TIMEOUT_MS;
 
   // Fire-and-forget heal-event sink (D-07): call onHeal but never await it, and
   // swallow any throw or rejected promise so observability can never affect the
@@ -239,7 +252,7 @@ export function wrapPage(page: Page, opts: WrapPageOptions): Page {
             emit,
             suite: resolved.suite,
             test: resolved.test,
-            replayTimeoutMs: RAW_REPLAY_TIMEOUT_MS,
+            replayTimeoutMs,
             nextOccurrence: resolved.nextOccurrence,
           };
           return wrapLocator(real, selector, ctx);
