@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Runner-Agnostic Healing
 status: executing
-stopped_at: Phase 5 context gathered
-last_updated: "2026-06-02T10:59:43.749Z"
-last_activity: 2026-06-02 -- Phase 5 planning complete
+stopped_at: Completed 05-01-PLAN.md
+last_updated: "2026-06-02T11:15:32.071Z"
+last_activity: 2026-06-02 -- Phase 05 Plan 01 complete (runner-agnostic core seam)
 progress:
   total_phases: 7
   completed_phases: 4
   total_plans: 15
-  completed_plans: 13
-  percent: 57
+  completed_plans: 14
+  percent: 60
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-31)
 
 **Core value:** When a test fails only because a selector changed (not because the app is actually broken), the suite keeps running and tells the team exactly what changed, without any data leaving their CI.
-**Current focus:** v0.2.0 Runner-Agnostic Healing — roadmap created (Phases 5-7); next step is `/gsd:plan-phase 5`.
+**Current focus:** Phase 05 — Runner-Agnostic Core
 
 ## Current Position
 
-Phase: 5 — Runner-Agnostic Core (not started)
-Plan: —
-Status: Ready to execute
-Last activity: 2026-06-02 -- Phase 5 planning complete
+Phase: 05 (Runner-Agnostic Core) — EXECUTING
+Plan: 2 of 2
+Status: Plan 05-01 complete; 05-02 (fixture refactor onto the core, WRAP-04) next
+Last activity: 2026-06-02 -- Phase 05 Plan 01 complete (runner-agnostic core seam)
 
 ## Performance Metrics
 
@@ -66,6 +66,7 @@ Last activity: 2026-06-02 -- Phase 5 planning complete
 | Phase 04 P01 | 9 | 3 tasks | 4 files |
 | Phase 04 P02 | 11 | 3 tasks | 5 files |
 | Phase 04 P03 | 41 | 2 tasks | 4 files |
+| Phase 05 P01 | 14 | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -74,6 +75,7 @@ Last activity: 2026-06-02 -- Phase 5 planning complete
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
+- [Phase 5 P01]: HealContext seam made pluggable — `emit(SelfmendEvent)` + a `(suite, test)` scope source replace `testInfo`/`testFile`/`testTitle` (core no longer references the Playwright test-info object). Public `wrapPage(page, { store, config?, onHeal?, scope? })` returns a bare wrapped Page; `resetScope(page)` is WeakMap-backed (keyed by the returned proxy). Store keys stay byte-identical (suite→testFile arg, test→testTitle arg). onHeal is fire-and-forget errors-swallowed; emit never suppresses the original error (guarded on both refused + healed paths). Pure matching core untouched. WRAP-01/02/03 done. 141 unit green.
 - [Roadmap v0.2]: Coarse granularity → 3 phases. Build order is core seam → standalone exports → docs, because the shipped fixture already contains an internal `wrapPage` + `wrapLocator` proxy + per-test occurrence counter + `HealContext`; v0.2 generalizes that seam rather than rewriting it.
 - [Roadmap v0.2]: WRAP-04 (refactor the @playwright/test fixture onto the shared core) is grouped INTO Phase 5 with the core seam, because the refactor IS the proof the new seam is correct; its success criterion is the existing 125 unit + 23 e2e tests still passing with zero behaviour change.
 - [Roadmap v0.2]: The cross-cutting never-false-green-in-raw-mode rule (a wrong/missing identity key is a missed heal, never a wrong heal) is owned by Phase 5 (which owns wrapPage/identity) as an explicit, control-tested success criterion; it lives in the pure core so every adapter inherits it.
@@ -102,6 +104,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-02T10:41:43.258Z
+Last session: 2026-06-02T11:15:32.062Z
 Stopped at: Phase 5 context gathered
-Resume file: .planning/phases/05-runner-agnostic-core/05-CONTEXT.md
+Resume file: None

@@ -52,9 +52,9 @@ Current milestone. Open the engine to any framework that drives a real Playwrigh
 
 ### Runner-Agnostic API
 
-- [ ] **WRAP-01**: A developer can wrap a raw Playwright `Page` with `wrapPage(page, opts)` so every locator on it self-heals, with no test rewrites and without the `@playwright/test` runner
-- [ ] **WRAP-02**: Healing identity is supplied via a `scope()` callback returning two stable ids (suite, test), read at each locator creation, so a long-lived page heals correctly as it moves between logical tests
-- [ ] **WRAP-03**: The occurrence index resets per (suite, test) scope automatically and is retry-safe (re-running the same scope does not drift the index)
+- [x] **WRAP-01**: A developer can wrap a raw Playwright `Page` with `wrapPage(page, opts)` so every locator on it self-heals, with no test rewrites and without the `@playwright/test` runner
+- [x] **WRAP-02**: Healing identity is supplied via a `scope()` callback returning two stable ids (suite, test), read at each locator creation, so a long-lived page heals correctly as it moves between logical tests
+- [x] **WRAP-03**: The occurrence index resets per (suite, test) scope automatically and is retry-safe (re-running the same scope does not drift the index)
 - [ ] **WRAP-04**: The `@playwright/test` integration is refactored onto the same core/`wrapPage` with zero behaviour change (every existing test still passes)
 
 ### Output
@@ -128,9 +128,9 @@ Which phases cover which requirements. Populated during roadmap creation.
 | PRIV-01 | Phase 4 | Complete |
 | CFG-01 | Phase 1 | Complete |
 | CFG-02 | Phase 2 | Complete |
-| WRAP-01 | Phase 5 | Pending |
-| WRAP-02 | Phase 5 | Pending |
-| WRAP-03 | Phase 5 | Pending |
+| WRAP-01 | Phase 5 | Complete |
+| WRAP-02 | Phase 5 | Complete |
+| WRAP-03 | Phase 5 | Complete |
 | WRAP-04 | Phase 5 | Pending |
 | OUT-01 | Phase 6 | Pending |
 | OUT-02 | Phase 6 | Pending |
