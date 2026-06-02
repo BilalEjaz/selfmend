@@ -129,7 +129,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   1. The README documents `wrapPage` with a working recipe for each of Cucumber, Mocha/Jest, and a plain script, each showing the `scope()` wiring, baseline load/save, and heal output
   2. The docs state the never-false-green guarantee for raw mode and the honest limits (Page-level only this milestone; a wrong/missing key is a missed heal, never a wrong heal) so an adopter is not surprised
   3. Each recipe is runnable as written (the code blocks compile against the published API surface, validated by a docs/example smoke check)
-**Plans**: TBD
+**Plans**: 2 plans
+- [ ] 07-01-PLAN.md, Compilable examples spine: 3 recipe example files (Cucumber/Mocha-Jest/plain-script) + type-only framework shims + tsconfig.examples.json + check:examples smoke-check wired into CI (criterion 3, DOC-01)
+- [ ] 07-02-PLAN.md, README recipes + raw-mode never-false-green/honest-limits + CHANGELOG 0.2.0 + check:readme sync gate binding README blocks to the example files (criteria 1+2, DOC-01)
 
 ## Progress
 
