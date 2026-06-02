@@ -64,9 +64,9 @@ Current milestone. Open the engine to any framework that drives a real Playwrigh
 
 ### Persistence
 
-- [ ] **STORE-01**: A developer can load a baseline standalone via `loadBaseline(path)` and save it via `saveBaseline(path, store)`, decoupled from the reporter/shards
-- [ ] **STORE-02**: `saveBaseline` refreshes-and-adds only and never auto-prunes
-- [ ] **STORE-03**: A developer can merge per-worker baselines via `mergeBaselines(...)` so parallel runs do not corrupt or lose entries
+- [x] **STORE-01**: A developer can load a baseline standalone via `loadBaseline(path)` and save it via `saveBaseline(path, store)`, decoupled from the reporter/shards
+- [x] **STORE-02**: `saveBaseline` refreshes-and-adds only and never auto-prunes
+- [x] **STORE-03**: A developer can merge per-worker baselines via `mergeBaselines(...)` so parallel runs do not corrupt or lose entries
 
 ### Docs
 
@@ -134,9 +134,9 @@ Which phases cover which requirements. Populated during roadmap creation.
 | WRAP-04 | Phase 5 | Complete |
 | OUT-01 | Phase 6 | Pending |
 | OUT-02 | Phase 6 | Pending |
-| STORE-01 | Phase 6 | Pending |
-| STORE-02 | Phase 6 | Pending |
-| STORE-03 | Phase 6 | Pending |
+| STORE-01 | Phase 6 | Complete |
+| STORE-02 | Phase 6 | Complete |
+| STORE-03 | Phase 6 | Complete |
 | DOC-01 | Phase 7 | Pending |
 
 **Coverage:**
