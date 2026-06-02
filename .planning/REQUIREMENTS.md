@@ -97,12 +97,13 @@ Explicitly excluded. Documented to prevent scope creep.
 
 | Feature | Reason |
 |---------|--------|
-| Cypress, Selenium, other frameworks | v1 is Playwright-only, to ship a sharp tool before expanding across incompatible locator models |
+| Cypress, Selenium, other frameworks | v0.2 supports only frameworks that drive a real Playwright `Page`; Cypress/Selenium use incompatible locator models |
+| BrowserContext-level wrapping | v0.2 is Page-level only; context-level (auto-wrap every page) is a later add |
 | Auto-editing test source files | The product proposes, it never silently rewrites tests |
 | Silent assertion rewriting | Destroys a test's reason to exist, the core anti-feature of this category |
 | Forcing a test green when confidence is low | Falsely green suites are the trust-killing failure mode |
 | Hosted dashboard, accounts, vendor cloud | Conflicts with the offline, no-data-leaves-CI core; an open-core layer is a far-future maybe |
-| Visual / computer-vision matching | Heavy dependency, out of the offline semantic-signal lane for v1 |
+| Visual / computer-vision matching | Heavy dependency, out of the offline semantic-signal lane |
 | Telemetry / analytics phone-home | Hard privacy constraint |
 
 ## Traceability
@@ -127,12 +128,21 @@ Which phases cover which requirements. Populated during roadmap creation.
 | PRIV-01 | Phase 4 | Complete |
 | CFG-01 | Phase 1 | Complete |
 | CFG-02 | Phase 2 | Complete |
+| WRAP-01 | Phase 5 | Pending |
+| WRAP-02 | Phase 5 | Pending |
+| WRAP-03 | Phase 5 | Pending |
+| WRAP-04 | Phase 5 | Pending |
+| OUT-01 | Phase 6 | Pending |
+| OUT-02 | Phase 6 | Pending |
+| STORE-01 | Phase 6 | Pending |
+| STORE-02 | Phase 6 | Pending |
+| STORE-03 | Phase 6 | Pending |
+| DOC-01 | Phase 7 | Pending |
 
 **Coverage:**
-- v1 requirements: 16 total
-- Mapped to phases: 16
-- Unmapped: 0
+- v1 requirements: 16 total, mapped 16, unmapped 0
+- v0.2.0 requirements: 10 total, mapped 10, unmapped 0
 
 ---
 *Requirements defined: 2026-05-31*
-*Last updated: 2026-05-31 after 01-05 — REP-01 complete; Phase 1 requirements (INST-01/02, CAP-01, MATCH-01, HEAL-01/02, REP-01, CFG-01) all done*
+*Last updated: 2026-06-02 — v0.2.0 roadmap created; 10 runner-agnostic requirements mapped to Phases 5-7 (WRAP-01..04 → Phase 5, OUT/STORE → Phase 6, DOC-01 → Phase 7)*

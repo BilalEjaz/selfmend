@@ -6,7 +6,7 @@ status: planning
 last_updated: "2026-06-02T10:17:21.936Z"
 last_activity: 2026-06-02
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-31)
 
 **Core value:** When a test fails only because a selector changed (not because the app is actually broken), the suite keeps running and tells the team exactly what changed, without any data leaving their CI.
-**Current focus:** Milestone complete
+**Current focus:** v0.2.0 Runner-Agnostic Healing — roadmap created (Phases 5-7); next step is `/gsd:plan-phase 5`.
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 5 — Runner-Agnostic Core (not started)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-06-02 — Milestone v0.2 started
+Status: Roadmap created, awaiting phase planning
+Last activity: 2026-06-02 — v0.2.0 roadmap created: 3 phases (5 Runner-Agnostic Core, 6 Standalone Persistence & Output, 7 Recipes & Docs), 10 requirements mapped 100%
 
 ## Performance Metrics
 
@@ -73,39 +73,12 @@ Last activity: 2026-06-02 — Milestone v0.2 started
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
+- [Roadmap v0.2]: Coarse granularity → 3 phases. Build order is core seam → standalone exports → docs, because the shipped fixture already contains an internal `wrapPage` + `wrapLocator` proxy + per-test occurrence counter + `HealContext`; v0.2 generalizes that seam rather than rewriting it.
+- [Roadmap v0.2]: WRAP-04 (refactor the @playwright/test fixture onto the shared core) is grouped INTO Phase 5 with the core seam, because the refactor IS the proof the new seam is correct; its success criterion is the existing 125 unit + 23 e2e tests still passing with zero behaviour change.
+- [Roadmap v0.2]: The cross-cutting never-false-green-in-raw-mode rule (a wrong/missing identity key is a missed heal, never a wrong heal) is owned by Phase 5 (which owns wrapPage/identity) as an explicit, control-tested success criterion; it lives in the pure core so every adapter inherits it.
+- [Roadmap v0.2]: Persistence + output building blocks (loadBaseline/saveBaseline/mergeBaselines, onHeal, renderHealSummary) cluster in Phase 6 — they are the standalone re-exposure of the existing persistence.ts + reporter rendering, decoupled from the Playwright reporter/shard machinery.
 - [Roadmap]: MVP vertical-slice mode — Phase 1 ships the thinnest REAL end-to-end heal on a single-worker simple case; later phases deepen signals/gates, add parallel safety, then publish.
 - [Roadmap]: Scoring and heal-decision logic stays pure (Playwright-free) and is built test-first; the false-green guarantee (confidence floor + second-best margin + no-force-heal) is enforced in code as explicit success criteria.
-- [Roadmap]: The live locator-rebind hook is the riskiest unknown and is de-risked inside Phase 1 (research likely needed) before the integration design is deepened.
-- [Phase ?]: [01-01]: selfmend config on-by-default (enabled:true, D-08) + conservative 0.9 threshold (D-09); defaults derived from the zod schema so they cannot drift
-- [Phase ?]: [01-01]: dual-package exports use per-format type conditions (.d.mts/.d.cts) matching tsdown output; verified with publint + attw
-- [Phase ?]: [01-02]: matching core is pure (Playwright/fs-free), deterministic, TDD-built; false-green guard lives in decide() via a conservative inclusive floor
-- [Phase ?]: [01-02]: scorer skips signals absent on both sides so missing signals never dilute to 0; HealEvent retains runner-up score so the Phase 2 margin gate needs no contract change
-- [Phase ?]: [01-03]: live-rebind PROVEN on PW 1.60 — catch errors.TimeoutError (instanceof OR name), rebind via fresh page.locator(newSel), replay; never pre-check count()
-- [Phase ?]: [01-03]: Locator Proxy partition — ACTION set heals, CHAIN set re-wraps, assertions pass through expect matchers (sacred by construction); FINDINGS.md is the plan-04 contract
-- [Phase ?]: [01-03]: timeout budget = explicit {timeout} on real attempt + separate bounded replay; measured heal overhead ~4% of real attempt (realAttempt=1207ms, heal=48ms)
-- [Phase ?]: [01-04]: live heal loop end-to-end — capture-on-success + catch real TimeoutError + score via locked pure core + rebind via fresh page.locator above the 0.9 floor; 8 PW + 26 vitest green
-- [Phase ?]: [01-04]: broken.html fixed to keep stable test-id and mutate only the volatile class so the locked scorer reaches a genuine high-confidence heal (scorer untouched, Rule 1)
-- [Phase ?]: [01-04]: throwaway rebind spike consumed + deleted; FINDINGS contract now realized in src/integration (Proxy method partition, two-budget timeout, fresh page.locator rebind)
-- [Phase ?]: [01-05]: reporter is summary-only by construction (D-05) — reads selfmend-heal attachments in the main process, no page/DOM access, cannot rebind; heal/report trust boundary kept disjoint
-- [Phase ?]: [01-05]: public selfmend entry re-exports healingFixture as test + expect unchanged (D-02/D-03 one-line swap); named-only exports + selfmend/reporter subpath so import/require resolve without .default; REP-02 margin column deferred to Phase 2 (D-07)
-- [Phase ?]: [02-01]: margin gate is an absolute second-best gap with an inclusive >= boundary (epsilon-guarded against float drift); floor checked before margin so two below-floor candidates report below-floor not ambiguous (D-01, D-03)
-- [Phase ?]: [02-01]: weight-ordering invariant pinned relatively (identity > structure by >0.05) against fixed SIGNAL_WEIGHTS, scorer untouched (D-09); global margin config key default 0.05, threshold unchanged (D-07, D-08)
-- [Phase ?]: [02-02]: transport widened to SelfmendEvent tagged union on the unchanged selfmend-heal attachment; missing kind decodes as healed (back-compat); refused scoped to 3 post-scoring reasons (D-05)
-- [Phase ?]: [02-02]: proxy attaches refused event then unconditionally re-throws (attach guarded, throw unguarded) so observability never false-greens (D-06, MATCH-04); reporter prints healed box then separate could-not-heal section (REP-02, D-04); 0.05 margin empirically refuses an ambiguous duplicate while single-survivor heal still heals
-- [Phase ?]: [03-01]: store-format version is a z.literal gate — mismatch/malformed safeParses to canonical EMPTY (ignore-and-recapture), never throws (D-10)
-- [Phase ?]: [03-01]: strict fingerprintSchema (eight derived signals only) rejects raw-DOM keys so PII never persists to the committed file (D-02); serializer rebuilds in fixed field + sorted key order for byte-stable zero-churn output (D-03)
-- [Phase ?]: [03-01]: mergeShards same-key precedence = larger value-derived compare key (not array position) so merge is order-independent (D-13); prune is a two-arg pure fn with NO completeness flag, gating deferred to reporter (D-09)
-- [Phase ?]: [03-02] persistence.ts is the single fs/path seam; all store paths via path.resolve(rootDir,...) incl. the test/env override, so a configured path can never escape the project (T-03-05)
-- [Phase ?]: [03-02] atomicWrite = temp sibling + fs.rename with EPERM/EBUSY/EACCES retry-backoff; exhausted retries rm temp + rethrow so a reader never sees a partial committed file (T-03-04)
-- [Phase ?]: [03-02] identify() is occurrence-based (selector,testFile,testTitle,occurrence); index incremented at wrapLocator CREATION, per-content per-test, so capture-run and broken-heal-run compute the identical key (D-04/D-05); no key -> no heal preserved (D-07)
-- [Phase ?]: [03-03] Merge+prune lives in the Reporter onEnd (not globalTeardown): only the reporter holds both the post-filter planned Suite (onBegin) and FullResult.status (onEnd) to gate the destructive prune (D-09)
-- [Phase ?]: [03-03] isComplete inspects BOTH FullConfig AND process.argv: PW 1.60 leaves FullConfig.grep at /.*/ for a CLI --grep run, so argv narrowing-flag detection closes the gap that would wrongly prune a filtered run (Open Q2/A1 resolved)
-- [Phase ?]: [03-03] Workers load baseline read-only at setup and flush parallelIndex shards at teardown; the reporter is the single atomic-merge writer; destructive prune gated behind SELFMEND_PRUNE + complete-run + passed, refresh-on-pass always runs (D-08)
-- [Phase ?]: [04-01]: PRIV-01 proven mechanically by a per-test throw-on-egress block + self-validation trip (egress counter === 0 across a real green heal); blanket throw is browser-safe (CDP is a stdio pipe); committed reproducible lockfile (D-08); NUL+no-network-import CI guard via portable perl
-- [Phase ?]: 04-02: bumped to 0.1.0 + prepublishOnly (build+publint+attw) guards a manual publish against stale/unbuilt dist (D-01/D-02)
-- [Phase ?]: 04-02: dist ships zero source maps; tsconfig declarationMap/sourceMap force tsdown sourcemap on, so they were removed (inert under tsc --noEmit) to make tsdown sourcemap:false effective (Pitfall 5)
-- [Phase ?]: 04-02: launch README pins the config table to the zod schema defaults (enabled/threshold 0.9/margin 0.05/testIdAttr) + documents SELFMEND_PRUNE, never-false-green trust model, committed-baseline workflow, WR-03/WR-04 limitations (D-07)
-- [Phase ?]: 04-03: matrix CI (node 22/24 x PW 1.42/1.60, no token, no publish step) + green terminal publish dry-run (selfmend@0.1.0, 14-file dist-only tarball) + RELEASING.md; honest-floor rule for the CI-pending 1.42 leg; real npm publish left to the human (D-01/D-06)
 - [Phase 4]: blocking phase gate APPROVED by orchestrator 2026-05-31 — independently verified 125 unit + 23 e2e green, publint/attw clean, pack=14 dist-only files, publish --dry-run=selfmend@0.1.0 (nothing published), CI holds no NPM_TOKEN; v1.0 milestone CLOSED
 
 ### Pending Todos
@@ -114,7 +87,7 @@ None yet.
 
 ### Blockers/Concerns
 
-- [Phase 1]: RESOLVED by 01-03 spike — live locator-rebind mechanics PROVEN on @playwright/test 1.60 (catch errors.TimeoutError, rebind via fresh page.locator, replay; chained Proxy re-wrap; assertions excluded; bounded timeout budget). Locked decisions in spike/FINDINGS.md feed plan 04. No remaining blockers.
+None. The runner-agnostic seam already exists internally (fixture.ts `wrapPage`, locator-proxy.ts `HealContext`/`wrapLocator`/`createOccurrenceCounter`, persistence.ts `loadBaseline`); Phase 5 lifts it to public, so the riskiest item is the WRAP-04 zero-behaviour-change refactor, gated by the existing test suite.
 
 ## Deferred Items
 
@@ -122,10 +95,12 @@ Items acknowledged and carried forward from previous milestone close:
 
 | Category | Item | Status | Deferred At |
 |----------|------|--------|-------------|
-| *(none)* | | | |
+| Scope | BrowserContext-level wrapping (auto-wrap every page) | Deferred to a later milestone | v0.2 planning |
+| Limitation | WR-03 occurrence index can shift on chained-locator calls between runs (fail-safe = missed heal) | Carried, fail-safe | v1 close |
+| Limitation | WR-04 withTimeout vs selectOption/setInputFiles value objects | Carried, fail-safe | v1 close |
 
 ## Session Continuity
 
-Last session: 2026-05-31T21:10:00.000Z
-Stopped at: Phase 4 complete — v1.0 milestone done (gate approved); next human step is the real npm publish per RELEASING.md
+Last session: 2026-06-02T10:17:21.936Z
+Stopped at: v0.2.0 roadmap created (Phases 5-7); next step is `/gsd:plan-phase 5`
 Resume file: None
