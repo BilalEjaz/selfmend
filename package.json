@@ -67,7 +67,8 @@
     "lint:pack": "publint --pack npm",
     "lint:types": "node scripts/check-types.mjs",
     "check:examples": "node scripts/check-examples.mjs",
-    "verify": "npm run build && npm run lint:pack && npm run lint:types && npm run typecheck && npm run check:examples && npm test",
+    "check:readme": "node scripts/check-readme-examples.mjs",
+    "verify": "npm run build && npm run lint:pack && npm run lint:types && npm run typecheck && npm run check:examples && npm run check:readme && npm test",
     "prepublishOnly": "npm run build && npm run lint:pack"
   },
   "peerDependencies": {
