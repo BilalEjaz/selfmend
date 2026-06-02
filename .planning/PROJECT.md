@@ -10,6 +10,22 @@ An open-source (MIT) Playwright plugin, distributed on npm, that makes end-to-en
 
 When a test fails only because a selector changed (not because the app is actually broken), the suite keeps running and tells the team exactly what changed, without any data leaving their CI.
 
+## Current Milestone: v0.2.0 Runner-Agnostic Healing
+
+**Goal:** Let selfmend heal in any framework that drives a real Playwright `Page` (Cucumber, Mocha, Jest, plain scripts), not just `@playwright/test`, through one `wrapPage` call plus standalone baseline persistence and a heal callback. v1 (the `@playwright/test` plugin) shipped as selfmend@0.1.x; this milestone turns the existing engine into a runner-agnostic core with `@playwright/test` as one adapter over it.
+
+**Target features:**
+- `wrapPage(page, { store, config?, onHeal?, scope? })` runner-agnostic entry point: one call wraps a raw page, every locator on it heals.
+- Dynamic `scope()` identity: two caller-provided ids read live at each locator creation, occurrence index resets per scope, retry-safe.
+- `onHeal` callback receiving both healed and could-not-heal events (no Playwright reporter required).
+- Standalone `loadBaseline(path)` / `saveBaseline(path, store)`: refresh-and-add only, never auto-prune.
+- `mergeBaselines(...)` so parallel-worker runs combine per-worker baselines safely.
+- `renderHealSummary(events)` so raw frameworks can print the same boxed report.
+- Refactor the `@playwright/test` fixture into one adapter over the shared core, with zero behaviour change for existing users.
+- Docs and recipes (Cucumber, Mocha/Jest, plain script).
+
+**Hard constraints carried in:** never-false-green is invariant across every adapter (it lives in the pure core); Page-level only this milestone (BrowserContext-level is a later add); the persisted key stores literal `suite`/`test` strings for reviewable diffs; only frameworks that expose a real Playwright `Page` are in scope (not Cypress or Selenium).
+
 ## Requirements
 
 ### Validated
