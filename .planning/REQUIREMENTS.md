@@ -59,8 +59,8 @@ Current milestone. Open the engine to any framework that drives a real Playwrigh
 
 ### Output
 
-- [ ] **OUT-01**: A developer can pass an `onHeal` callback that receives every heal event (healed and could-not-heal), so heals are loggable without a Playwright reporter
-- [ ] **OUT-02**: A developer can render the standard boxed heal summary from collected events via `renderHealSummary(events)`
+- [x] **OUT-01**: A developer can pass an `onHeal` callback that receives every heal event (healed and could-not-heal), so heals are loggable without a Playwright reporter
+- [x] **OUT-02**: A developer can render the standard boxed heal summary from collected events via `renderHealSummary(events)`
 
 ### Persistence
 
@@ -132,8 +132,8 @@ Which phases cover which requirements. Populated during roadmap creation.
 | WRAP-02 | Phase 5 | Complete |
 | WRAP-03 | Phase 5 | Complete |
 | WRAP-04 | Phase 5 | Complete |
-| OUT-01 | Phase 6 | Pending |
-| OUT-02 | Phase 6 | Pending |
+| OUT-01 | Phase 6 | Complete |
+| OUT-02 | Phase 6 | Complete |
 | STORE-01 | Phase 6 | Complete |
 | STORE-02 | Phase 6 | Complete |
 | STORE-03 | Phase 6 | Complete |

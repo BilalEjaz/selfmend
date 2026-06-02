@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Runner-Agnostic Healing
-status: verifying
-stopped_at: Completed 06-01 (standalone persistence slice)
-last_updated: "2026-06-02T13:52:59.786Z"
+status: executing
+stopped_at: Completed 06-02 (standalone output slice); Phase 06 complete
+last_updated: "2026-06-02T14:11:33.665Z"
 last_activity: 2026-06-02
 progress:
   total_phases: 7
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 17
-  completed_plans: 16
-  percent: 71
+  completed_plans: 17
+  percent: 86
 ---
 
 # Project State
@@ -25,9 +25,9 @@ See: .planning/PROJECT.md (updated 2026-05-31)
 
 ## Current Position
 
-Phase: 06 (Standalone Persistence & Output), EXECUTING
-Plan: 1 of 2 complete
-Status: 06-01 done (standalone persistence slice); 06-02 (onHeal + renderHealSummary) remaining
+Phase: 06 (Standalone Persistence & Output), COMPLETE
+Plan: 2 of 2 complete
+Status: 06-01 (standalone persistence) + 06-02 (standalone output: shared renderHealSummary + onHeal confirm) both done. Phase 06 complete; next is Phase 07 (docs).
 Last activity: 2026-06-02
 
 ## Performance Metrics
@@ -69,6 +69,7 @@ Last activity: 2026-06-02
 | Phase 05 P01 | 14 | 3 tasks | 9 files |
 | Phase 05 P02 | 9 | 2 tasks | 3 files |
 | Phase 06 P01 | 16 | 3 tasks | 8 files |
+| Phase 06 P02 | 8 min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -87,6 +88,7 @@ Recent decisions affecting current work:
 - [Phase 4]: blocking phase gate APPROVED by orchestrator 2026-05-31, independently verified 125 unit + 23 e2e green, publint/attw clean, pack=14 dist-only files, publish --dry-run=selfmend@0.1.0 (nothing published), CI holds no NPM_TOKEN; v1.0 milestone CLOSED
 - [Phase ?]: Phase 5 P02: fixture refactored onto shared wrapPage core (WRAP-04 single code path); keys/attachments/reporter byte-identical, 141 unit + 28 e2e green; added optional WrapPageOptions.replayTimeoutMs; tests/wrap-page.spec.ts proves raw-mode heal-green + never-false-green controls + throwing onHeal/scope fail-safe; pure matching core untouched
 - [Phase ?]: [Phase 6 P01]: Standalone persistence slice. Public loadBaseline(path)/saveBaseline(path,store) refresh-and-add only (never prune) + mergeBaselines(...stores) deterministic fold over mergeShards. Internal rootDir loader renamed loadCommittedBaseline; research cited ONE caller (reporter.ts) but fixture.ts was a SECOND silent same-signature caller, fixed (Rule 1). 151 unit + 5 e2e green; matching core untouched; no new deps; store format v1 unchanged. STORE-01/02/03 done.
+- [Phase ?]: [Phase 6 P02]: Output slice. renderHealSummary(events) extracted as the SINGLE shared pure renderer in src/reporter/render.ts; reporter.render() delegates (renderHealedBox count 0), proven byte-identical via a toBe full-string-equality snapshot feeding the same events to a real reporter and the pure fn (OUT-02). stripAnsi re-exported from render.js so reporter.test.ts imports keep working. onHeal confirmed in raw mode: healed + the three post-scoring refusals (no-candidates/below-floor/ambiguous) delivered, no-fingerprint silence asserted, NO production change since Phase 5 already wired both emit arms (OUT-01). renderHealSummary exported from index.ts. 163 unit + 29 e2e green; matching core untouched; no new deps.
 
 ### Pending Todos
 
@@ -108,6 +110,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-02T13:52:07.433Z
+Last session: 2026-06-02T14:10:41.179Z
 Stopped at: Phase 5 context gathered
 Resume file: None

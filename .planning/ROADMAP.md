@@ -24,7 +24,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Milestone v0.2.0 (Runner-Agnostic Healing):**
 
 - [x] **Phase 5: Runner-Agnostic Core** - Lift the internal `wrapPage` into a public `wrapPage(page, opts)` with caller-supplied `scope()` identity and pluggable event transport, then refactor the `@playwright/test` fixture onto it with zero behaviour change (completed 2026-06-02)
-- [ ] **Phase 6: Standalone Persistence & Output** - Expose `loadBaseline`/`saveBaseline`/`mergeBaselines` and the `onHeal` callback + `renderHealSummary` so raw frameworks persist baselines and print the boxed report with no Playwright reporter
+- [x] **Phase 6: Standalone Persistence & Output** - Expose `loadBaseline`/`saveBaseline`/`mergeBaselines` and the `onHeal` callback + `renderHealSummary` so raw frameworks persist baselines and print the boxed report with no Playwright reporter (completed 2026-06-02)
 - [ ] **Phase 7: Recipes & Docs** - Document `wrapPage` with working Cucumber, Mocha/Jest, and plain-script recipes plus the honest limits and never-false-green guarantee
 
 ## Phase Details
@@ -118,7 +118,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   5. A developer can render the standard boxed heal summary from collected events via `renderHealSummary(events)`, byte-identical to the reporter's output for the same events
 **Plans**: 2 plans
 - [x] 06-01-PLAN.md, Standalone persistence slice: loadBaseline(path)/saveBaseline(path,store) refresh-only + mergeBaselines(...) deterministic fold + internal loadCommittedBaseline rename (TDD; STORE-01/02/03)
-- [ ] 06-02-PLAN.md, Output slice: extract shared pure renderHealSummary(events) byte-identical + reporter delegates (zero output change) + raw-mode onHeal confirming test (TDD; OUT-01/OUT-02)
+- [x] 06-02-PLAN.md, Output slice: extract shared pure renderHealSummary(events) byte-identical + reporter delegates (zero output change) + raw-mode onHeal confirming test (TDD; OUT-01/OUT-02)
 
 ### Phase 7: Recipes & Docs
 **Goal**: A developer evaluating selfmend for a non-`@playwright/test` framework can follow the README to wire `wrapPage` into Cucumber, Mocha/Jest, or a plain script, and understands exactly what selfmend will and will not do, including the never-false-green guarantee and the honest limits.
@@ -143,5 +143,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 3. Persistence & Parallel-Worker Safety | 3/3 | Complete   | 2026-05-31 |
 | 4. Offline Verification & Publish | 3/3 | Complete | 2026-05-31 |
 | 5. Runner-Agnostic Core | 2/2 | Complete   | 2026-06-02 |
-| 6. Standalone Persistence & Output | 1/2 | In Progress|  |
+| 6. Standalone Persistence & Output | 2/2 | Complete   | 2026-06-02 |
 | 7. Recipes & Docs | 0/? | Not started | - |
