@@ -137,6 +137,341 @@ export const test = healingFixture.extend<MyFixtures>({
 });
 ```
 
+## Using selfmend without @playwright/test
+
+`wrapPage(rawPage, opts)` returns a wrapped page that is a drop-in for the
+original, so your step definitions and page objects need no changes. You supply
+the healing identity yourself with a `scope()` callback, read live each time a
+locator is created, you load and save the baseline file yourself, and you collect
+heals with an `onHeal` callback then print them with `renderHealSummary`. There is
+no Playwright reporter in this mode, so it works under any framework that drives a
+real Playwright `Page`: Cucumber, Mocha, Jest, or a plain script.
+
+Each recipe below is a real file under `examples/`. The blocks here are kept
+byte-identical to those files by a check (see `npm run check:readme`), so the code
+you read is the code that is type-checked against the published API.
+
+### Plain script
+
+The simplest end-to-end wiring with no test runner: launch Chromium, wrap one
+page, load the baseline, drive actions, print the summary, save the baseline.
+
+```ts
+// Recipe: selfmend in a plain Node script (no test runner).
+//
+// The simplest end-to-end wiring of the runner-agnostic core. Launch a real
+// Chromium, wrap one raw Page with wrapPage, load a baseline at the start, drive
+// real locator actions, then print the heal summary and save the baseline at the
+// end. This file is type-checked against the published selfmend API; it does not
+// need to be executed to prove the recipe compiles.
+
+import { chromium, type Page } from "@playwright/test";
+
+import {
+  wrapPage,
+  loadBaseline,
+  saveBaseline,
+  renderHealSummary,
+  type SelfmendEvent,
+} from "selfmend";
+
+// The baseline file this script owns. selfmend never reaches outside this path:
+// it loads it at the start of the run and saves the refreshed store at the end.
+const BASELINE_PATH = "./.selfmend/baseline.json";
+
+async function main(): Promise<void> {
+  // Load the committed baseline into a store. On the very first run the file may
+  // not exist yet; loadBaseline returns a fresh empty store in that case, so the
+  // first run captures fingerprints and later runs heal against them.
+  const store = await loadBaseline(BASELINE_PATH);
+
+  // Collect every heal event for the end-of-run summary. onHeal receives the
+  // full SelfmendEvent union (healed and refused), fire-and-forget.
+  const events: SelfmendEvent[] = [];
+
+  const browser = await chromium.launch();
+  try {
+    const context = await browser.newContext();
+    const raw = await context.newPage();
+
+    // Wrap the raw page once. scope() returns the (suite, test) identity, read
+    // live per locator creation. In a plain script there is no runner to ask, so
+    // we pass a stable literal identity. NEVER derive scope from the page URL.
+    const page: Page = wrapPage(raw, {
+      store,
+      scope: () => ({ suite: "smoke", test: "checkout" }),
+      onHeal: (event) => {
+        events.push(event);
+      },
+    });
+
+    // Drive real locator actions through the wrapped page. If a selector has
+    // drifted since the baseline was captured, selfmend heals it above the
+    // confidence floor and replays; below the floor it fails normally.
+    await page.goto("https://example.com/checkout");
+    await page.getByRole("button", { name: "Place order" }).click();
+
+    await context.close();
+  } finally {
+    await browser.close();
+  }
+
+  // Print the same boxed summary the @playwright/test reporter prints, built
+  // from the collected events with no reporter involved.
+  console.log(renderHealSummary(events));
+
+  // Save the refreshed baseline. saveBaseline is refresh-and-add only: it never
+  // prunes, so a locator not exercised this run keeps its stored fingerprint.
+  await saveBaseline(BASELINE_PATH, store);
+}
+
+main().catch((error: unknown) => {
+  console.error(error);
+  process.exitCode = 1;
+});
+```
+
+This recipe shows the three pieces every recipe needs: the `scope()` wiring, the
+baseline load and save, and the heal output via `renderHealSummary`.
+
+### Cucumber
+
+Create the page once per feature, wrap it onto the World in a `Before` hook so
+step definitions stay untouched, and key `scope()` on the feature and scenario
+names read live.
+
+```ts
+// Recipe: selfmend with Cucumber (@cucumber/cucumber).
+//
+// Wires the runner-agnostic core into Cucumber's hook lifecycle. The page is
+// created once per feature and wrapped once; scope() is keyed on two stable
+// identifiers (the feature name and the scenario name) read live, so each
+// scenario's locators key to a distinct baseline. resetScope is called in a
+// Before hook so a same-scope retry restarts occurrence counting cleanly.
+//
+// This file is type-checked against the published selfmend API. The Cucumber
+// symbols resolve through examples/shims/frameworks.d.ts at type-check time; an
+// adopter installs @cucumber/cucumber, whose real types then replace the shim.
+
+import {
+  Before,
+  BeforeAll,
+  AfterAll,
+  When,
+  type SelfmendWorld,
+} from "@cucumber/cucumber";
+import { chromium, type Browser, type Page } from "@playwright/test";
+
+import {
+  wrapPage,
+  resetScope,
+  loadBaseline,
+  saveBaseline,
+  renderHealSummary,
+  BaselineStore,
+  type SelfmendEvent,
+} from "selfmend";
+
+const BASELINE_PATH = "./.selfmend/baseline.json";
+
+// Shared across the whole feature run: one browser, one store loaded once, and
+// one events array the AfterAll hook renders. createPage builds a fresh raw page
+// per feature; the Before hook wraps it onto the World.
+let browser: Browser;
+let store: BaselineStore = new BaselineStore();
+const events: SelfmendEvent[] = [];
+
+async function createPage(): Promise<Page> {
+  const context = await browser.newContext();
+  return context.newPage();
+}
+
+// Load the committed baseline once before any scenario runs.
+BeforeAll(async () => {
+  browser = await chromium.launch();
+  store = await loadBaseline(BASELINE_PATH);
+});
+
+// Per scenario: build a raw page, wrap it onto the World, and reset the
+// occurrence scope. scope() reads this.featureName and this.scenarioName LIVE,
+// so step definitions and page objects keep using this.page untouched.
+Before(async function (this: SelfmendWorld) {
+  const raw = await createPage();
+  this.page = wrapPage(raw, {
+    store,
+    scope: () => ({ suite: this.featureName, test: this.scenarioName }),
+    onHeal: (event) => {
+      events.push(event);
+    },
+  });
+
+  // resetScope makes a same-scope retry restart occurrence counting at zero.
+  // It is a safe no-op on a page selfmend did not wrap, and omitting it only
+  // risks a missed heal on retry, never a wrong heal.
+  resetScope(this.page);
+});
+
+// A representative step. The wrapped page heals drifted locators above the
+// confidence floor and replays; below the floor the step fails normally.
+When("the user places the order", async function (this: SelfmendWorld) {
+  const page = this.page;
+  if (!page) throw new Error("page was not initialized in the Before hook");
+  await page.getByRole("button", { name: "Place order" }).click();
+});
+
+// After the whole feature run: print the boxed heal summary from the collected
+// events, save the refreshed baseline, and close the browser.
+AfterAll(async () => {
+  console.log(renderHealSummary(events));
+  await saveBaseline(BASELINE_PATH, store);
+  await browser.close();
+});
+```
+
+This recipe shows the three pieces every recipe needs: the `scope()` wiring, the
+baseline load and save, and the heal output via `renderHealSummary`.
+
+### Mocha / Jest
+
+One file covers both runners because they share the `before` / `after` /
+`beforeEach` hook names. Load the baseline once, wrap one long-lived page, and
+update the live test name per test so `scope()` reads the current logical test.
+
+```ts
+// Recipe: selfmend with Mocha or Jest.
+//
+// One file covers both runners because they share the before / after /
+// beforeEach / describe / it hook names. Wire the runner-agnostic core into the
+// hook lifecycle: load the baseline once in before(), wrap one long-lived raw
+// page and update the live (suite, test) identity per test in beforeEach(), then
+// print the heal summary and save the baseline in after().
+//
+// This file is type-checked against the published selfmend API. The hook symbols
+// resolve through examples/shims/frameworks.d.ts at type-check time; an adopter
+// using the real Mocha or Jest gets those globals from the runner itself.
+
+import { chromium, type Browser, type Page } from "@playwright/test";
+
+import {
+  wrapPage,
+  loadBaseline,
+  saveBaseline,
+  mergeBaselines,
+  renderHealSummary,
+  BaselineStore,
+  type SelfmendEvent,
+} from "selfmend";
+
+const BASELINE_PATH = "./.selfmend/baseline.json";
+
+describe("checkout", () => {
+  let browser: Browser;
+  let store: BaselineStore = new BaselineStore();
+  let page: Page;
+  const events: SelfmendEvent[] = [];
+
+  // The suite name is stable; the test name updates per test so scope() reads
+  // the current logical test live. NEVER derive these from the page URL.
+  const suiteName = "checkout";
+  let currentTestName = "";
+
+  before(async () => {
+    browser = await chromium.launch();
+    store = await loadBaseline(BASELINE_PATH);
+    const context = await browser.newContext();
+    const raw = await context.newPage();
+    page = wrapPage(raw, {
+      store,
+      scope: () => ({ suite: suiteName, test: currentTestName }),
+      onHeal: (event) => {
+        events.push(event);
+      },
+    });
+  });
+
+  beforeEach(() => {
+    // Point scope() at the test about to run. With Mocha set this from
+    // this.currentTest?.title; with Jest from expect.getState().currentTestName.
+    currentTestName = "places the order";
+  });
+
+  it("places the order", async () => {
+    await page.getByRole("button", { name: "Place order" }).click();
+  });
+
+  after(async () => {
+    console.log(renderHealSummary(events));
+    await saveBaseline(BASELINE_PATH, store);
+    await browser.close();
+  });
+});
+
+// Parallel workers note. Mocha and Jest run files in separate worker processes,
+// and each worker keeps its OWN BaselineStore, so a single shared store is not
+// visible across workers. To persist one merged baseline, collect each worker's
+// store (for example by having each worker saveBaseline to its own shard path)
+// and merge them deterministically in a final, single-process step before the
+// one authoritative save:
+//
+//   const workerStoreA = await loadBaseline("./.selfmend/shard-0.json");
+//   const workerStoreB = await loadBaseline("./.selfmend/shard-1.json");
+//   const merged = mergeBaselines(workerStoreA, workerStoreB);
+//   await saveBaseline(BASELINE_PATH, merged);
+//
+// mergeBaselines is order-independent: the result is the same regardless of the
+// order the worker stores are passed in.
+export async function mergeWorkerBaselines(
+  workerStoreA: BaselineStore,
+  workerStoreB: BaselineStore,
+): Promise<void> {
+  const merged = mergeBaselines(workerStoreA, workerStoreB);
+  await saveBaseline(BASELINE_PATH, merged);
+}
+```
+
+This recipe shows the three pieces every recipe needs: the `scope()` wiring, the
+baseline load and save, and the heal output via `renderHealSummary`.
+
+### The never-false-green guarantee in raw mode
+
+Raw mode inherits the exact same trust guarantee as the fixture mode, because the
+heal decision lives in one pure core that every adapter calls:
+
+- **The same two gates, in the same pure core.** A heal is accepted only when the
+  top candidate clears the confidence floor (`threshold`, default `0.9`) **and**
+  beats the runner-up by at least the absolute `margin` (default `0.05`). Both
+  gates run in the pure `decide()` core, identical in fixture mode and raw mode,
+  so every adapter inherits the never-false-green behaviour rather than
+  reimplementing it.
+- **A wrong or missing `scope()` key is a missed heal, never a wrong heal.** The
+  baseline is keyed by `(suite, test)`. If `scope()` returns the wrong key, or no
+  key was captured for it, the broken locator simply finds no stored fingerprint
+  to match, so the locator fails normally. This is control-tested: a wrong or
+  absent scope produces a missed heal, never a heal to the wrong element and never
+  a false green.
+- **A throwing or absent `scope()` / `onHeal` fails safe.** If `scope()` throws,
+  selfmend falls back to a coarse default and the run proceeds; if `onHeal` throws
+  or is absent, the error is swallowed and the heal still completes. Neither can
+  break the run or change the heal decision.
+
+### Honest limits
+
+Sourced from the project's out-of-scope list, so an adopter is not surprised:
+
+- **Page-level only this milestone.** `wrapPage` heals one Playwright `Page`. A
+  popup or a new tab is a separate `Page`, so each needs its own `wrapPage`.
+  Whole-`BrowserContext` wrapping (auto-wrapping every page) is a later add.
+- **Playwright Pages only.** This works only with frameworks that drive a real
+  Playwright `Page`. Cypress and Selenium use incompatible locator models and are
+  out of scope.
+- **Parallel runs keep per-worker baselines.** Each worker process keeps its own
+  baseline. Merge them with `mergeBaselines(...)` in a single final step before
+  saving, so two workers never fight over one file.
+- **The v1 caveats still apply.** The occurrence-index drift on chained-locator
+  calls (fail-safe: a missed heal, never a wrong one) and the
+  `selectOption` / `setInputFiles` value-object replay edge case carry over
+  unchanged. See the [Limitations](#limitations) section for the full text.
+
 ## How healing works, and the never-false-green trust model
 
 1. **Capture on green.** On a passing run, every locator that resolves and acts
@@ -225,36 +560,6 @@ A `.gitignore` that matches this workflow:
   `selectOption({ label })` or `setInputFiles({ name, mimeType, buffer })` gets a
   `timeout` key merged in. Playwright currently ignores the extra key, so there
   is no observed break, but it is a known latent edge case on the replay path.
-
-## Roadmap
-
-Today selfmend hooks into the `@playwright/test` runner. The next release lets you
-use it with any framework that drives a Playwright page directly, so Cucumber,
-Mocha, Jest and plain scripts can heal too.
-
-The plan is one call when you create your page:
-
-```ts
-const page = wrapPage(rawPage, { store, onHeal });
-```
-
-After that, every locator on that page heals, whatever your step definitions or
-page objects look like, with no rewrites. You load and save the baseline file
-yourself (in a `BeforeAll`/`AfterAll`, or wherever your framework gives you a
-hook), and you get a callback on every heal so you can log it into your own
-report. No Playwright reporter required.
-
-A few honest notes for when it lands:
-
-- It only works with Playwright. Cypress and Selenium drive the browser their own
-  way, so they are out of scope.
-- It heals one page at a time for now. Popups and new tabs get their own wrap,
-  and whole-context wrapping comes later.
-- Running in parallel, each worker keeps its own baseline and you merge them at
-  the end, so two workers never fight over one file.
-
-The safety rule does not change: if selfmend is not confident, your test fails the
-normal way. It will never click the wrong element to keep a run green.
 
 ## License
 
