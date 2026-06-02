@@ -52,6 +52,13 @@ export {
   attachHealEvent,
 } from "./integration/events.js";
 
+// The standalone boxed-summary renderer (OUT-02): render the SAME boxed heal
+// summary the @playwright/test reporter prints, from a flat array of collected
+// SelfmendEvents, with no reporter. Byte-identical to the reporter because both
+// call this one shared pure function. It is the output counterpart to onHeal
+// (OUT-01): collect events off onHeal, then renderHealSummary(events).
+export { renderHealSummary } from "./reporter/render.js";
+
 // The runner-agnostic core (WRAP-01/02/03, D-01/D-02): wrap ANY Playwright Page
 // outside the @playwright/test fixture (Cucumber, Mocha, a plain script). The
 // fixture is one adapter on the same seam.
