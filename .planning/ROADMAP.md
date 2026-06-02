@@ -116,7 +116,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. A developer can combine per-worker baselines via `mergeBaselines(...)` so a parallel run loses no entries and produces no corruption (verified by a merge test over overlapping and disjoint per-worker baselines)
   4. A developer can pass an `onHeal` callback to `wrapPage` that receives every heal event (both healed and could-not-heal), so heals are loggable without a Playwright reporter
   5. A developer can render the standard boxed heal summary from collected events via `renderHealSummary(events)`, byte-identical to the reporter's output for the same events
-**Plans**: TBD
+**Plans**: 2 plans
+- [ ] 06-01-PLAN.md, Standalone persistence slice: loadBaseline(path)/saveBaseline(path,store) refresh-only + mergeBaselines(...) deterministic fold + internal loadCommittedBaseline rename (TDD; STORE-01/02/03)
+- [ ] 06-02-PLAN.md, Output slice: extract shared pure renderHealSummary(events) byte-identical + reporter delegates (zero output change) + raw-mode onHeal confirming test (TDD; OUT-01/OUT-02)
 
 ### Phase 7: Recipes & Docs
 **Goal**: A developer evaluating selfmend for a non-`@playwright/test` framework can follow the README to wire `wrapPage` into Cucumber, Mocha/Jest, or a plain script, and understands exactly what selfmend will and will not do, including the never-false-green guarantee and the honest limits.
@@ -141,5 +143,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 3. Persistence & Parallel-Worker Safety | 3/3 | Complete   | 2026-05-31 |
 | 4. Offline Verification & Publish | 3/3 | Complete | 2026-05-31 |
 | 5. Runner-Agnostic Core | 2/2 | Complete   | 2026-06-02 |
-| 6. Standalone Persistence & Output | 0/? | Not started | - |
+| 6. Standalone Persistence & Output | 0/2 | Not started | - |
 | 7. Recipes & Docs | 0/? | Not started | - |
