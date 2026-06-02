@@ -1,6 +1,7 @@
 import { STORE_FORMAT_VERSION } from "./schema.js";
 import type { BaselineFile, ShardFile } from "./schema.js";
 import type { Fingerprint } from "../matching/types.js";
+import { BaselineStore } from "./store.js";
 
 /**
  * PURE merge + refresh + prune for the parallel-worker baseline (D-08/D-09/D-13).
@@ -115,4 +116,31 @@ export function prune(store: BaselineFile, seenKeys: Set<string>): BaselineFile 
     }
   }
   return { version: STORE_FORMAT_VERSION, entries };
+}
+
+/**
+ * PUBLIC, deterministic N-way merge of per-worker {@link BaselineStore}s
+ * (STORE-03). A thin fold over {@link mergeShards}: each input store is shaped
+ * into a captures-only shard (`seen: []`, irrelevant to a refresh-only consumer)
+ * and merged with the same value-derived conflict rule, so no entry is lost and
+ * the result is ORDER-INDEPENDENT (`mergeBaselines(a, b)` deep-equals
+ * `mergeBaselines(b, a)`) over both overlapping and disjoint inputs. Identical
+ * captures for a key collapse to that one value. Zero arguments yields an EMPTY
+ * store; one argument is a passthrough.
+ *
+ * The deterministic tiebreak is mergeShards' max value-derived compare key, NOT
+ * last-write-wins, so the merge never depends on argument position or worker
+ * timing.
+ */
+export function mergeBaselines(...stores: BaselineStore[]): BaselineStore {
+  const shards: ShardFile[] = stores.map((store) => ({
+    version: STORE_FORMAT_VERSION,
+    captures: store.toBaselineFile().entries,
+    seen: [],
+  }));
+  const merged = mergeShards(shards);
+  return BaselineStore.fromBaseline({
+    version: STORE_FORMAT_VERSION,
+    entries: merged.captures,
+  });
 }

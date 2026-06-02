@@ -3,6 +3,8 @@ import path from "node:path";
 
 import { parseBaseline, parseShard, type ShardFile } from "./schema.js";
 import { BaselineStore } from "./store.js";
+import { serialize } from "./serialize.js";
+import { refresh } from "./merge.js";
 
 /**
  * The fs adapter for the baseline store (CAP-02 / CAP-03).
@@ -84,16 +86,14 @@ export function shardPath(
 }
 
 /**
- * Load the committed baseline into a {@link BaselineStore} (read-only at worker
- * start). Reads the file, `JSON.parse`s in a try/catch, hands the parsed value
- * to the safe `parseBaseline` loader, and seeds a store. A missing or bad file
- * yields an EMPTY store and NEVER throws (Pitfall 5).
+ * Read+parse a baseline JSON file at an arbitrary absolute or relative `target`
+ * path into an EMPTY-on-failure {@link BaselineStore}. Shared by the committed
+ * loader and the public path-based loader: reads the file, `JSON.parse`s in a
+ * try/catch, hands the parsed value to the safe `parseBaseline` loader, and
+ * seeds a store. A missing or bad file yields an EMPTY store and NEVER throws
+ * (Pitfall 5 / T-06-01).
  */
-export async function loadBaseline(
-  rootDir: string,
-  override?: string,
-): Promise<BaselineStore> {
-  const target = baselinePath(rootDir, override);
+async function readBaselineFile(target: string): Promise<BaselineStore> {
   let parsed: unknown;
   try {
     parsed = JSON.parse(await readFile(target, "utf8"));
@@ -103,6 +103,59 @@ export async function loadBaseline(
   }
   const baseline = parseBaseline(parsed);
   return BaselineStore.fromBaseline(baseline);
+}
+
+/**
+ * Load the committed baseline into a {@link BaselineStore} (read-only at worker
+ * start). Resolves `.selfmend/baseline.json` UNDER `rootDir` (the env-override
+ * path keeps the storeRoot containment clamp), then delegates to the shared
+ * fail-soft reader. A missing or bad file yields an EMPTY store and NEVER throws
+ * (Pitfall 5).
+ *
+ * NOTE: this is the INTERNAL rootDir-based loader (formerly `loadBaseline`),
+ * renamed to free the public name `loadBaseline` for the path-based wrapper
+ * below. Its single caller is the reporter's `mergeAndPersist`.
+ */
+export async function loadCommittedBaseline(
+  rootDir: string,
+  override?: string,
+): Promise<BaselineStore> {
+  return readBaselineFile(baselinePath(rootDir, override));
+}
+
+/**
+ * PUBLIC, path-based loader (STORE-01): load a baseline from a LITERAL file path
+ * the consumer owns, decoupled from the reporter and shard machinery. Takes the
+ * caller's path verbatim (no `.selfmend` containment clamp; the public path is
+ * the consumer's own choice, RESEARCH Security V12 / T-06-03) and reuses the
+ * same fail-soft parse, so a missing, malformed, or foreign-version file yields
+ * an EMPTY store and NEVER throws (T-06-01 / T-06-02).
+ */
+export async function loadBaseline(target: string): Promise<BaselineStore> {
+  return readBaselineFile(target);
+}
+
+/**
+ * PUBLIC, path-based save (STORE-01 / STORE-02): persist `store` to a LITERAL
+ * file path the consumer owns. REFRESH-AND-ADD ONLY: it loads whatever entries
+ * already live at `target`, then `refresh`es them with the store's entries, so a
+ * key present before but NOT recaptured this time SURVIVES. It NEVER calls
+ * `prune` (prune stays gated in the reporter alone). The write is ATOMIC
+ * (temp-file + rename with the Windows retry loop) and BYTE-STABLE (`serialize`,
+ * 2-space + trailing newline). The caller path is passed straight to
+ * `atomicWrite` with no containment clamp (the consumer chooses where their
+ * baseline lives, T-06-03).
+ */
+export async function saveBaseline(
+  target: string,
+  store: BaselineStore,
+): Promise<void> {
+  const existing = (await readBaselineFile(target)).toBaselineFile();
+  const next = refresh(existing, {
+    captures: store.toBaselineFile().entries,
+    seen: new Set<string>(),
+  });
+  await atomicWrite(target, serialize(next));
 }
 
 /**
