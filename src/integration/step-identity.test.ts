@@ -14,6 +14,8 @@ import type { SelfmendConfig } from "../config/schema.js";
  * two distinct resolutions of the SAME selector string get DISTINCT baseline
  * keys (CR-01, now via the occurrence index) rather than colliding on a
  * hardcoded occurrence 0.
+ *
+ * Migrated to the Phase-5 HealContext (emit + suite/test scope source).
  */
 class RecordingStore extends BaselineStore {
   readonly keys: string[] = [];
@@ -49,9 +51,9 @@ function ctxWith(
     page: {} as never,
     store,
     config,
-    testInfo: { title: "t" } as never,
-    testFile: "spec.ts",
-    testTitle: "t",
+    emit: () => {},
+    suite: "spec.ts",
+    test: "t",
     replayTimeoutMs: 5000,
     nextOccurrence,
   };

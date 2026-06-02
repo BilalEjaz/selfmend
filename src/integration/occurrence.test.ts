@@ -12,6 +12,10 @@ import type { SelfmendConfig } from "../config/schema.js";
  * A store that records every identity key it is asked to build, so we can prove
  * the occurrence-based key (D-04/D-05) is distinct per occurrence and STABLE
  * between a capture run and a later broken-heal run.
+ *
+ * Migrated to the Phase-5 HealContext (emit + suite/test scope source instead
+ * of testInfo/testFile/testTitle): with `suite`/`test` mapped to the OLD
+ * testFile/testTitle values, the recorded keys must be BYTE-IDENTICAL (D-09).
  */
 class RecordingStore extends BaselineStore {
   readonly keys: string[] = [];
@@ -42,15 +46,16 @@ function fakeLocator(): import("@playwright/test").Locator {
 function ctxWith(
   store: RecordingStore,
   nextOccurrence: (contentKey: string) => number,
-  testTitle = "suite > case",
+  test = "suite > case",
 ): HealContext {
   return {
     page: {} as never,
     store,
     config,
-    testInfo: { title: "case" } as never,
-    testFile: "spec.ts",
-    testTitle,
+    // Phase-5 seam: emit replaces testInfo; suite/test replace testFile/testTitle.
+    emit: () => {},
+    suite: "spec.ts",
+    test,
     replayTimeoutMs: 5000,
     nextOccurrence,
   };
@@ -83,6 +88,17 @@ describe("occurrence-based identity key (D-04/D-05)", () => {
     expect(store.keys[0]).not.toBe(store.keys[1]);
     expect(store.keys[0]).toContain(" 0");
     expect(store.keys[1]).toContain(" 1");
+  });
+
+  it("byte-identical keys: suite/test map to the old testFile/testTitle (D-09)", () => {
+    // The cross-run key format must stay `suite :: test :: selector ::
+    // occurrence` byte-identical to the pre-refactor `testFile :: testTitle ::
+    // selector :: occurrence` so committed baselines keep matching (WRAP-04).
+    const store = new RecordingStore();
+    const ctx = ctxWith(store, createOccurrenceCounter(), "suite > case");
+    wrapLocator(fakeLocator(), "page.locator(button)", ctx);
+
+    expect(store.keys[0]).toBe("spec.ts suite > case page.locator(button) 0");
   });
 
   it("the key sequence is IDENTICAL whether or not any element resolves (D-05, Pitfall 4)", () => {
