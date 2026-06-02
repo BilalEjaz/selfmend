@@ -55,7 +55,7 @@ Current milestone. Open the engine to any framework that drives a real Playwrigh
 - [x] **WRAP-01**: A developer can wrap a raw Playwright `Page` with `wrapPage(page, opts)` so every locator on it self-heals, with no test rewrites and without the `@playwright/test` runner
 - [x] **WRAP-02**: Healing identity is supplied via a `scope()` callback returning two stable ids (suite, test), read at each locator creation, so a long-lived page heals correctly as it moves between logical tests
 - [x] **WRAP-03**: The occurrence index resets per (suite, test) scope automatically and is retry-safe (re-running the same scope does not drift the index)
-- [ ] **WRAP-04**: The `@playwright/test` integration is refactored onto the same core/`wrapPage` with zero behaviour change (every existing test still passes)
+- [x] **WRAP-04**: The `@playwright/test` integration is refactored onto the same core/`wrapPage` with zero behaviour change (every existing test still passes)
 
 ### Output
 
@@ -131,7 +131,7 @@ Which phases cover which requirements. Populated during roadmap creation.
 | WRAP-01 | Phase 5 | Complete |
 | WRAP-02 | Phase 5 | Complete |
 | WRAP-03 | Phase 5 | Complete |
-| WRAP-04 | Phase 5 | Pending |
+| WRAP-04 | Phase 5 | Complete |
 | OUT-01 | Phase 6 | Pending |
 | OUT-02 | Phase 6 | Pending |
 | STORE-01 | Phase 6 | Pending |
@@ -145,4 +145,4 @@ Which phases cover which requirements. Populated during roadmap creation.
 
 ---
 *Requirements defined: 2026-05-31*
-*Last updated: 2026-06-02 — v0.2.0 roadmap created; 10 runner-agnostic requirements mapped to Phases 5-7 (WRAP-01..04 → Phase 5, OUT/STORE → Phase 6, DOC-01 → Phase 7)*
+*Last updated: 2026-06-02, v0.2.0 roadmap created; 10 runner-agnostic requirements mapped to Phases 5-7 (WRAP-01..04 → Phase 5, OUT/STORE → Phase 6, DOC-01 → Phase 7)*

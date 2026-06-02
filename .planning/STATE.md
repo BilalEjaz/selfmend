@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Runner-Agnostic Healing
-status: executing
-stopped_at: Completed 05-01-PLAN.md
-last_updated: "2026-06-02T11:15:32.071Z"
-last_activity: 2026-06-02 -- Phase 05 Plan 01 complete (runner-agnostic core seam)
+status: verifying
+stopped_at: Phase 5 context gathered
+last_updated: "2026-06-02T11:46:48.572Z"
+last_activity: 2026-06-02
 progress:
   total_phases: 7
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 15
-  completed_plans: 14
-  percent: 60
+  completed_plans: 15
+  percent: 71
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-31)
 
 **Core value:** When a test fails only because a selector changed (not because the app is actually broken), the suite keeps running and tells the team exactly what changed, without any data leaving their CI.
-**Current focus:** Phase 05 — Runner-Agnostic Core
+**Current focus:** Phase 05, Runner-Agnostic Core
 
 ## Current Position
 
-Phase: 05 (Runner-Agnostic Core) — EXECUTING
+Phase: 05 (Runner-Agnostic Core), EXECUTING
 Plan: 2 of 2
-Status: Plan 05-01 complete; 05-02 (fixture refactor onto the core, WRAP-04) next
-Last activity: 2026-06-02 -- Phase 05 Plan 01 complete (runner-agnostic core seam)
+Status: Phase complete, ready for verification
+Last activity: 2026-06-02
 
 ## Performance Metrics
 
@@ -67,6 +67,7 @@ Last activity: 2026-06-02 -- Phase 05 Plan 01 complete (runner-agnostic core sea
 | Phase 04 P02 | 11 | 3 tasks | 5 files |
 | Phase 04 P03 | 41 | 2 tasks | 4 files |
 | Phase 05 P01 | 14 | 3 tasks | 9 files |
+| Phase 05 P02 | 9 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -75,14 +76,15 @@ Last activity: 2026-06-02 -- Phase 05 Plan 01 complete (runner-agnostic core sea
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-- [Phase 5 P01]: HealContext seam made pluggable — `emit(SelfmendEvent)` + a `(suite, test)` scope source replace `testInfo`/`testFile`/`testTitle` (core no longer references the Playwright test-info object). Public `wrapPage(page, { store, config?, onHeal?, scope? })` returns a bare wrapped Page; `resetScope(page)` is WeakMap-backed (keyed by the returned proxy). Store keys stay byte-identical (suite→testFile arg, test→testTitle arg). onHeal is fire-and-forget errors-swallowed; emit never suppresses the original error (guarded on both refused + healed paths). Pure matching core untouched. WRAP-01/02/03 done. 141 unit green.
+- [Phase 5 P01]: HealContext seam made pluggable, `emit(SelfmendEvent)` + a `(suite, test)` scope source replace `testInfo`/`testFile`/`testTitle` (core no longer references the Playwright test-info object). Public `wrapPage(page, { store, config?, onHeal?, scope? })` returns a bare wrapped Page; `resetScope(page)` is WeakMap-backed (keyed by the returned proxy). Store keys stay byte-identical (suite→testFile arg, test→testTitle arg). onHeal is fire-and-forget errors-swallowed; emit never suppresses the original error (guarded on both refused + healed paths). Pure matching core untouched. WRAP-01/02/03 done. 141 unit green.
 - [Roadmap v0.2]: Coarse granularity → 3 phases. Build order is core seam → standalone exports → docs, because the shipped fixture already contains an internal `wrapPage` + `wrapLocator` proxy + per-test occurrence counter + `HealContext`; v0.2 generalizes that seam rather than rewriting it.
 - [Roadmap v0.2]: WRAP-04 (refactor the @playwright/test fixture onto the shared core) is grouped INTO Phase 5 with the core seam, because the refactor IS the proof the new seam is correct; its success criterion is the existing 125 unit + 23 e2e tests still passing with zero behaviour change.
 - [Roadmap v0.2]: The cross-cutting never-false-green-in-raw-mode rule (a wrong/missing identity key is a missed heal, never a wrong heal) is owned by Phase 5 (which owns wrapPage/identity) as an explicit, control-tested success criterion; it lives in the pure core so every adapter inherits it.
-- [Roadmap v0.2]: Persistence + output building blocks (loadBaseline/saveBaseline/mergeBaselines, onHeal, renderHealSummary) cluster in Phase 6 — they are the standalone re-exposure of the existing persistence.ts + reporter rendering, decoupled from the Playwright reporter/shard machinery.
-- [Roadmap]: MVP vertical-slice mode — Phase 1 ships the thinnest REAL end-to-end heal on a single-worker simple case; later phases deepen signals/gates, add parallel safety, then publish.
+- [Roadmap v0.2]: Persistence + output building blocks (loadBaseline/saveBaseline/mergeBaselines, onHeal, renderHealSummary) cluster in Phase 6, they are the standalone re-exposure of the existing persistence.ts + reporter rendering, decoupled from the Playwright reporter/shard machinery.
+- [Roadmap]: MVP vertical-slice mode, Phase 1 ships the thinnest REAL end-to-end heal on a single-worker simple case; later phases deepen signals/gates, add parallel safety, then publish.
 - [Roadmap]: Scoring and heal-decision logic stays pure (Playwright-free) and is built test-first; the false-green guarantee (confidence floor + second-best margin + no-force-heal) is enforced in code as explicit success criteria.
-- [Phase 4]: blocking phase gate APPROVED by orchestrator 2026-05-31 — independently verified 125 unit + 23 e2e green, publint/attw clean, pack=14 dist-only files, publish --dry-run=selfmend@0.1.0 (nothing published), CI holds no NPM_TOKEN; v1.0 milestone CLOSED
+- [Phase 4]: blocking phase gate APPROVED by orchestrator 2026-05-31, independently verified 125 unit + 23 e2e green, publint/attw clean, pack=14 dist-only files, publish --dry-run=selfmend@0.1.0 (nothing published), CI holds no NPM_TOKEN; v1.0 milestone CLOSED
+- [Phase ?]: Phase 5 P02: fixture refactored onto shared wrapPage core (WRAP-04 single code path); keys/attachments/reporter byte-identical, 141 unit + 28 e2e green; added optional WrapPageOptions.replayTimeoutMs; tests/wrap-page.spec.ts proves raw-mode heal-green + never-false-green controls + throwing onHeal/scope fail-safe; pure matching core untouched
 
 ### Pending Todos
 
@@ -104,6 +106,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-02T11:15:32.062Z
+Last session: 2026-06-02T11:46:12.237Z
 Stopped at: Phase 5 context gathered
 Resume file: None

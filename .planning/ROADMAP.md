@@ -4,7 +4,7 @@
 
 This roadmap delivers an offline, MIT-licensed, Playwright-native self-healing locator plugin as a series of working vertical slices. Phase 1 lands the thinnest possible REAL heal: install into a project, capture a fingerprint on a passing run, match a broken locator against it through the trust gates (confidence floor, second-best margin, never-force-green), rebind it live, and print a console summary, all on a single-worker simple case. The live-rebind hook (the riskiest unknown) is de-risked here so the integration design is proven before it is deepened. Later phases widen the signal model and harden the trust gates, make the baseline persist safely under parallel workers, and finish offline verification and the npm publish. Throughout, the scoring and heal-decision logic stays pure (Playwright-free) and is built test-first, because that pure core is where the product's defining false-green guarantee is enforced.
 
-**Milestone v0.2.0 (Runner-Agnostic Healing)** opens the shipped v1 engine to any framework that drives a real Playwright `Page` (Cucumber, Mocha, Jest, plain scripts), not just `@playwright/test`. The shipped fixture already contains everything the runner-agnostic seam needs — an internal `wrapPage`, the `wrapLocator` proxy, a per-test occurrence counter, and a `HealContext` carrying identity, store, and config — so this milestone is a *generalization*, not a rewrite. Phase 5 lifts the internal `wrapPage` into a public runner-agnostic core: identity becomes a caller-supplied `scope()` callback (read live per locator creation, occurrence reset per scope, retry-safe), event transport becomes pluggable (a callback in place of the Playwright `testInfo.attach` channel), and the existing `@playwright/test` fixture is refactored to be one adapter over that core with zero behaviour change (proven by the existing 125 unit + 23 e2e tests still passing). Phase 6 exposes the persistence and output building blocks raw frameworks need as standalone functions (`loadBaseline`/`saveBaseline` refresh-and-add-only, `mergeBaselines` for parallel runs, `onHeal` callback, `renderHealSummary`). Phase 7 documents `wrapPage` with real Cucumber / Mocha-Jest / plain-script recipes and the honest never-false-green guarantee. The cross-cutting hard rule — never-false-green holds in raw mode exactly as in fixture mode; a wrong or missing identity key is a *missed* heal, never a wrong heal or a false green — is enforced in the pure core and asserted as an explicit success criterion in Phase 5.
+**Milestone v0.2.0 (Runner-Agnostic Healing)** opens the shipped v1 engine to any framework that drives a real Playwright `Page` (Cucumber, Mocha, Jest, plain scripts), not just `@playwright/test`. The shipped fixture already contains everything the runner-agnostic seam needs, an internal `wrapPage`, the `wrapLocator` proxy, a per-test occurrence counter, and a `HealContext` carrying identity, store, and config, so this milestone is a *generalization*, not a rewrite. Phase 5 lifts the internal `wrapPage` into a public runner-agnostic core: identity becomes a caller-supplied `scope()` callback (read live per locator creation, occurrence reset per scope, retry-safe), event transport becomes pluggable (a callback in place of the Playwright `testInfo.attach` channel), and the existing `@playwright/test` fixture is refactored to be one adapter over that core with zero behaviour change (proven by the existing 125 unit + 23 e2e tests still passing). Phase 6 exposes the persistence and output building blocks raw frameworks need as standalone functions (`loadBaseline`/`saveBaseline` refresh-and-add-only, `mergeBaselines` for parallel runs, `onHeal` callback, `renderHealSummary`). Phase 7 documents `wrapPage` with real Cucumber / Mocha-Jest / plain-script recipes and the honest never-false-green guarantee. The cross-cutting hard rule, never-false-green holds in raw mode exactly as in fixture mode; a wrong or missing identity key is a *missed* heal, never a wrong heal or a false green, is enforced in the pure core and asserted as an explicit success criterion in Phase 5.
 
 ## Phases
 
@@ -23,7 +23,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 **Milestone v0.2.0 (Runner-Agnostic Healing):**
 
-- [ ] **Phase 5: Runner-Agnostic Core** - Lift the internal `wrapPage` into a public `wrapPage(page, opts)` with caller-supplied `scope()` identity and pluggable event transport, then refactor the `@playwright/test` fixture onto it with zero behaviour change
+- [x] **Phase 5: Runner-Agnostic Core** - Lift the internal `wrapPage` into a public `wrapPage(page, opts)` with caller-supplied `scope()` identity and pluggable event transport, then refactor the `@playwright/test` fixture onto it with zero behaviour change (completed 2026-06-02)
 - [ ] **Phase 6: Standalone Persistence & Output** - Expose `loadBaseline`/`saveBaseline`/`mergeBaselines` and the `onHeal` callback + `renderHealSummary` so raw frameworks persist baselines and print the boxed report with no Playwright reporter
 - [ ] **Phase 7: Recipes & Docs** - Document `wrapPage` with working Cucumber, Mocha/Jest, and plain-script recipes plus the honest limits and never-false-green guarantee
 
@@ -41,11 +41,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. At end of run the console summary lists the heal with original selector, healed target, and confidence score
   5. User can toggle healing on or off via plugin config
 **Plans**: 5 plans
-- [x] 01-01-PLAN.md — Package skeleton (dual ESM/CJS, peer dep), test-first config (CFG-01), framework configs + offline HTML fixture
-- [x] 01-02-PLAN.md — Pure Playwright-free scorer + heal-decision with conservative floor (TDD, MATCH-01 core, false-green guard)
-- [x] 01-03-PLAN.md — Throwaway rebind spike: catch TimeoutError + replay, chained-Proxy, bounded timeout budget (de-risk)
-- [x] 01-04-PLAN.md — Live heal loop: in-process store, fingerprint capture, candidate-finder, locator Proxy + page fixture (CAP-01, HEAL-01/02, INST-02)
-- [x] 01-05-PLAN.md — Summary-only boxed reporter (REP-01) + public import-swap entry + install/report proof (INST-01/02)
+- [x] 01-01-PLAN.md, Package skeleton (dual ESM/CJS, peer dep), test-first config (CFG-01), framework configs + offline HTML fixture
+- [x] 01-02-PLAN.md, Pure Playwright-free scorer + heal-decision with conservative floor (TDD, MATCH-01 core, false-green guard)
+- [x] 01-03-PLAN.md, Throwaway rebind spike: catch TimeoutError + replay, chained-Proxy, bounded timeout budget (de-risk)
+- [x] 01-04-PLAN.md, Live heal loop: in-process store, fingerprint capture, candidate-finder, locator Proxy + page fixture (CAP-01, HEAL-01/02, INST-02)
+- [x] 01-05-PLAN.md, Summary-only boxed reporter (REP-01) + public import-swap entry + install/report proof (INST-01/02)
 
 ### Phase 2: Trust Hardening
 **Goal**: The matcher becomes trustworthy: multi-signal weighted scoring, both trust gates enforced in the pure core, and a console audit trail that cannot produce a false green.
@@ -59,8 +59,8 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. The console summary clearly distinguishes healed locators from failed-to-heal ones, showing confidence and runner-up margin per heal
   5. User can configure the confidence floor and the margin gate via plugin config
 **Plans**: 2 plans
-- [x] 02-01-PLAN.md — Pure core + config: margin gate in decide(), bestScore on no-heal, weight ordering invariant, margin config key (TDD; MATCH-02, MATCH-03, CFG-02)
-- [x] 02-02-PLAN.md — Refused-heal slice: SelfmendEvent tagged union, proxy attach-then-rethrow, reporter could-not-heal section, ambiguous-duplicate Playwright proof (MATCH-04, REP-02)
+- [x] 02-01-PLAN.md, Pure core + config: margin gate in decide(), bestScore on no-heal, weight ordering invariant, margin config key (TDD; MATCH-02, MATCH-03, CFG-02)
+- [x] 02-02-PLAN.md, Refused-heal slice: SelfmendEvent tagged union, proxy attach-then-rethrow, reporter could-not-heal section, ambiguous-duplicate Playwright proof (MATCH-04, REP-02)
 
 ### Phase 3: Persistence & Parallel-Worker Safety
 **Goal**: The baseline store survives across runs and stays corruption-free when Playwright runs tests across parallel workers.
@@ -72,9 +72,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. A fully parallel multi-worker run produces no store corruption or lost writes (per-worker shards merged deterministically, verified by a concurrent-write test)
   3. The persisted store holds only minimal derived signals, not raw DOM content, and is human-inspectable
 **Plans**: 3 plans
-- [x] 03-01-PLAN.md — Pure store layer (TDD): versioned zod schema, deterministic serializer, merge+refresh+prune; Playwright/fs-free (CAP-02, CAP-03)
-- [x] 03-02-PLAN.md — fs persistence adapter (Windows-safe atomic write, parallelIndex shards) + occurrence-based identity key swap across proxy/store/fixture (CAP-02, CAP-03)
-- [x] 03-03-PLAN.md — Worker shard flush + Reporter onBegin/onEnd merge+gated-prune + .gitignore reconcile + CAP-02/CAP-03/D-09 integration specs (CAP-02, CAP-03)
+- [x] 03-01-PLAN.md, Pure store layer (TDD): versioned zod schema, deterministic serializer, merge+refresh+prune; Playwright/fs-free (CAP-02, CAP-03)
+- [x] 03-02-PLAN.md, fs persistence adapter (Windows-safe atomic write, parallelIndex shards) + occurrence-based identity key swap across proxy/store/fixture (CAP-02, CAP-03)
+- [x] 03-03-PLAN.md, Worker shard flush + Reporter onBegin/onEnd merge+gated-prune + .gitignore reconcile + CAP-02/CAP-03/D-09 integration specs (CAP-02, CAP-03)
 
 ### Phase 4: Offline Verification & Publish
 **Goal**: The offline guarantee is proven mechanically and the package installs cleanly from npm in real ESM and CJS projects across the supported Playwright range.
@@ -87,9 +87,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. A Playwright-version matrix (lowest and highest declared supported minors) passes the heal integration tests
   4. The package is published to npm under MIT with a README documenting zero-friction install
 **Plans**: 3 plans
-- [x] 04-01-PLAN.md — Commit lockfile (D-08) + self-validating PRIV-01 offline network-block heal-cycle test (D-03) + NUL-byte/no-network-import guard
-- [x] 04-02-PLAN.md — Publish prep: version 0.1.0 + CHANGELOG + prepublishOnly + no source maps + D-07 README (config ref, trust model, committed-baseline, limitations)
-- [x] 04-03-PLAN.md — Matrix CI (node 22/24 x PW 1.42/1.60, manual release) + green npm publish --dry-run terminal proof + RELEASING checklist
+- [x] 04-01-PLAN.md, Commit lockfile (D-08) + self-validating PRIV-01 offline network-block heal-cycle test (D-03) + NUL-byte/no-network-import guard
+- [x] 04-02-PLAN.md, Publish prep: version 0.1.0 + CHANGELOG + prepublishOnly + no source maps + D-07 README (config ref, trust model, committed-baseline, limitations)
+- [x] 04-03-PLAN.md, Matrix CI (node 22/24 x PW 1.42/1.60, manual release) + green npm publish --dry-run terminal proof + RELEASING checklist
 
 ### Phase 5: Runner-Agnostic Core
 **Goal**: A developer driving a raw Playwright `Page` from any framework can call one `wrapPage(page, opts)` and have every locator on that page self-heal, with identity supplied by a caller `scope()` callback and heal events delivered through a pluggable transport, while the shipped `@playwright/test` fixture becomes one thin adapter over that same core with no behaviour change for existing users.
@@ -102,8 +102,8 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Never-false-green holds in raw mode exactly as in fixture mode: a wrong or missing identity key produces a *missed* heal (the locator fails normally), never a wrong heal and never a false green, proven by a control test that supplies a bad/absent scope
   4. The `@playwright/test` fixture is refactored to delegate to the shared `wrapPage` core, and the existing 125 unit + 23 e2e tests all still pass with zero behaviour change for existing fixture users
 **Plans**: 2 plans
-- [x] 05-01-PLAN.md — Core seam refactor (HealContext pluggable emit + scope source, no testInfo) + public wrapPage/resetScope; TDD scope-lifetime (auto-reset + resetScope) + config merge (WRAP-01/02/03)
-- [ ] 05-02-PLAN.md — Refactor the @playwright/test fixture onto the shared core (zero-behaviour-change HARD gate, 125 unit + 23 e2e byte-identical) + raw-mode wrap-page integration proof (heal-green + never-false-green controls + throwing onHeal/scope fail-safe) (WRAP-04/WRAP-01)
+- [x] 05-01-PLAN.md, Core seam refactor (HealContext pluggable emit + scope source, no testInfo) + public wrapPage/resetScope; TDD scope-lifetime (auto-reset + resetScope) + config merge (WRAP-01/02/03)
+- [x] 05-02-PLAN.md, Refactor the @playwright/test fixture onto the shared core (zero-behaviour-change HARD gate, 125 unit + 23 e2e byte-identical) + raw-mode wrap-page integration proof (heal-green + never-false-green controls + throwing onHeal/scope fail-safe) (WRAP-04/WRAP-01)
 
 ### Phase 6: Standalone Persistence & Output
 **Goal**: A raw-framework user has every persistence and output building block the fixture+reporter gave `@playwright/test` users, exposed as standalone functions: load and save a baseline file directly, merge per-worker baselines safely for parallel runs, receive every heal event through an `onHeal` callback, and render the same boxed summary from collected events without any Playwright reporter.
@@ -140,6 +140,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 2. Trust Hardening | 2/2 | Complete   | 2026-05-31 |
 | 3. Persistence & Parallel-Worker Safety | 3/3 | Complete   | 2026-05-31 |
 | 4. Offline Verification & Publish | 3/3 | Complete | 2026-05-31 |
-| 5. Runner-Agnostic Core | 1/2 | In Progress|  |
+| 5. Runner-Agnostic Core | 2/2 | Complete   | 2026-06-02 |
 | 6. Standalone Persistence & Output | 0/? | Not started | - |
 | 7. Recipes & Docs | 0/? | Not started | - |
