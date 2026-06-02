@@ -46,6 +46,34 @@ Requirements for the initial release. v1 is locator healing only.
 - [x] **CFG-01**: User can toggle healing on or off via plugin config
 - [x] **CFG-02**: User can configure the confidence floor and the margin gate
 
+## v0.2.0 Requirements (Runner-Agnostic Healing)
+
+Current milestone. Open the engine to any framework that drives a real Playwright `Page`.
+
+### Runner-Agnostic API
+
+- [ ] **WRAP-01**: A developer can wrap a raw Playwright `Page` with `wrapPage(page, opts)` so every locator on it self-heals, with no test rewrites and without the `@playwright/test` runner
+- [ ] **WRAP-02**: Healing identity is supplied via a `scope()` callback returning two stable ids (suite, test), read at each locator creation, so a long-lived page heals correctly as it moves between logical tests
+- [ ] **WRAP-03**: The occurrence index resets per (suite, test) scope automatically and is retry-safe (re-running the same scope does not drift the index)
+- [ ] **WRAP-04**: The `@playwright/test` integration is refactored onto the same core/`wrapPage` with zero behaviour change (every existing test still passes)
+
+### Output
+
+- [ ] **OUT-01**: A developer can pass an `onHeal` callback that receives every heal event (healed and could-not-heal), so heals are loggable without a Playwright reporter
+- [ ] **OUT-02**: A developer can render the standard boxed heal summary from collected events via `renderHealSummary(events)`
+
+### Persistence
+
+- [ ] **STORE-01**: A developer can load a baseline standalone via `loadBaseline(path)` and save it via `saveBaseline(path, store)`, decoupled from the reporter/shards
+- [ ] **STORE-02**: `saveBaseline` refreshes-and-adds only and never auto-prunes
+- [ ] **STORE-03**: A developer can merge per-worker baselines via `mergeBaselines(...)` so parallel runs do not corrupt or lose entries
+
+### Docs
+
+- [ ] **DOC-01**: README and recipes document `wrapPage` for Cucumber, Mocha/Jest, and a plain script, with the honest limits and the never-false-green guarantee
+
+> **Cross-cutting hard rule (every WRAP/STORE requirement inherits this):** never-false-green holds in raw mode exactly as in fixture mode. A wrong or missing identity key must produce a missed heal, never a wrong heal or a false green.
+
 ## v2 Requirements
 
 Deferred to a future release. Tracked but not in the current roadmap.
