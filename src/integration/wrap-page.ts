@@ -1,5 +1,14 @@
+import type { Locator, Page } from "@playwright/test";
+
 import { configSchema, type SelfmendConfig } from "../config/schema.js";
+import type { BaselineStore } from "../store/store.js";
+import {
+  wrapLocator,
+  type HealContext,
+} from "./locator-proxy.js";
 import { createOccurrenceCounter } from "./locator-proxy.js";
+import type { SelfmendEvent } from "./events.js";
+import { PAGE_LOCATOR_FACTORIES, buildPageSelector } from "./fixture.js";
 
 /**
  * The runner-agnostic core entry (WRAP-01/02/03). This module owns the two
@@ -127,4 +136,136 @@ export function resolveConfig(
   partial?: Partial<SelfmendConfig>,
 ): SelfmendConfig {
   return configSchema.parse({ ...(partial ?? {}) });
+}
+
+/** The options bag the public {@link wrapPage} accepts (D-01). */
+export interface WrapPageOptions {
+  /** The baseline store this page captures into and heals against (required). */
+  store: BaselineStore;
+  /** Optional config partial, merged over the defaults through the schema. */
+  config?: Partial<SelfmendConfig>;
+  /**
+   * Optional fire-and-forget heal-event sink (D-07). Receives the full
+   * {@link SelfmendEvent} union (healed + refused). Invoked but NOT awaited;
+   * a throw or rejected promise is swallowed so it can never slow, stall, or
+   * break the run. Omit it and heal events are simply dropped (emit is a no-op).
+   */
+  onHeal?: (event: SelfmendEvent) => void;
+  /**
+   * Optional live identity source (D-03). Read at EACH locator creation so one
+   * long-lived page tracks the current logical test. Omit it and every locator
+   * keys under the coarse `{ suite: "", test: "" }` default (D-04). NEVER derive
+   * this from the page URL.
+   */
+  scope?: ScopeSource;
+}
+
+/**
+ * The raw-mode replay budget (ms). The real attempt keeps the caller's own
+ * timeout (auto-wait is untouched); only the REPLAY is capped so a flaky heal
+ * target cannot balloon the per-action wall-clock (FINDINGS (b)). Fixed in raw
+ * mode (no `testInfo.timeout` to mirror — Claude's discretion per CONTEXT).
+ */
+const RAW_REPLAY_TIMEOUT_MS = 5000;
+
+/**
+ * Resolve the wrapped page's scope controller (D-06). Keyed by the RETURNED
+ * proxy so the bare-Page return (D-01) is preserved — the controller lives
+ * off-object in a side table, never as a visible property on the page.
+ */
+const CONTROLLERS = new WeakMap<object, ScopeController>();
+
+/**
+ * Wrap a real Playwright `Page` so its locator-factory methods return
+ * healing-aware Locators, returning the BARE wrapped page (D-01) — a drop-in for
+ * the original `page`, so `this.page = wrapPage(rawPage, opts)` leaves all step
+ * / page-object code untouched. This is the runner-agnostic core entry
+ * (WRAP-01); the `@playwright/test` fixture is one adapter on top of the same
+ * `wrapLocator` + `HealContext` seam.
+ *
+ * Per factory call it builds a fresh {@link HealContext} from the live scope
+ * (auto-resetting the occurrence counter on a `(suite, test)` tuple change,
+ * D-05) and an `emit` that forwards to `onHeal` fire-and-forget with errors
+ * swallowed (D-07); with no `onHeal`, emit is a safe no-op. Never-false-green
+ * is unchanged: it lives in the pure `decide()`, so a coarse/wrong/absent key is
+ * a MISSED heal, never a wrong heal (D-11).
+ */
+export function wrapPage(page: Page, opts: WrapPageOptions): Page {
+  const config = resolveConfig(opts.config);
+  const controller = createScopeController(opts.scope);
+
+  // Fire-and-forget heal-event sink (D-07): call onHeal but never await it, and
+  // swallow any throw or rejected promise so observability can never affect the
+  // run. With no onHeal, emit is a no-op.
+  const emit = (event: SelfmendEvent): void => {
+    const handler = opts.onHeal;
+    if (!handler) return;
+    try {
+      const maybePromise = handler(event) as unknown;
+      if (
+        maybePromise &&
+        typeof (maybePromise as { then?: unknown }).then === "function"
+      ) {
+        (maybePromise as Promise<unknown>).then(undefined, () => {});
+      }
+    } catch {
+      // Fire-and-forget: a throwing onHeal never affects the run.
+    }
+  };
+
+  const wrapped = new Proxy(page, {
+    get(target, prop, receiver) {
+      const value = Reflect.get(target, prop, receiver) as unknown;
+      if (typeof value !== "function") return value;
+
+      if (typeof prop === "string" && PAGE_LOCATOR_FACTORIES.has(prop)) {
+        return (...args: unknown[]): Locator => {
+          const real = (value as (...a: unknown[]) => Locator).apply(
+            target,
+            args,
+          );
+          // Read the scope LIVE for THIS creation (D-03): auto-resets the
+          // counter on a tuple change and returns the current (suite, test).
+          const resolved = controller.resolve();
+          const selector = buildPageSelector(
+            prop,
+            args,
+            resolved.nextOccurrence,
+          );
+          const ctx: HealContext = {
+            page: target,
+            store: opts.store,
+            config,
+            emit,
+            suite: resolved.suite,
+            test: resolved.test,
+            replayTimeoutMs: RAW_REPLAY_TIMEOUT_MS,
+            nextOccurrence: resolved.nextOccurrence,
+          };
+          return wrapLocator(real, selector, ctx);
+        };
+      }
+
+      return (value as (...a: unknown[]) => unknown).bind(target);
+    },
+  });
+
+  // Stash the controller keyed by the returned proxy so resetScope can find it
+  // without exposing it on the bare-Page return (D-06).
+  CONTROLLERS.set(wrapped, controller);
+  return wrapped;
+}
+
+/**
+ * Force an occurrence-counter reset for a same-scope retry on a reused wrapped
+ * page (D-06). The auto-reset cannot see a retry that re-enters the IDENTICAL
+ * `(suite, test)` tuple, so callers wire `resetScope(page)` in a Before hook
+ * when they have such retries. Resolves the page's controller via the
+ * {@link CONTROLLERS} WeakMap (keyed by the returned proxy); calling it on a
+ * page selfmend did not wrap is a safe no-op. Omitting it is fail-safe — a
+ * missed heal on retry, never a wrong heal.
+ */
+export function resetScope(page: Page): void {
+  const controller = CONTROLLERS.get(page as unknown as object);
+  controller?.reset();
 }

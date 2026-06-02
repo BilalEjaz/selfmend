@@ -38,8 +38,13 @@ import {
  * and public entry point are wired in plan 05.
  */
 
-/** Locator-factory methods on `page` that must return wrapped Locators. */
-const PAGE_LOCATOR_FACTORIES = new Set<string>([
+/**
+ * Locator-factory methods on `page` that must return wrapped Locators. Shared
+ * with the public {@link import("./wrap-page.js").wrapPage} so the
+ * `@playwright/test` fixture and the runner-agnostic core wrap the exact same
+ * factory surface (one source of truth, WRAP-04).
+ */
+export const PAGE_LOCATOR_FACTORIES = new Set<string>([
   "locator",
   "getByRole",
   "getByText",

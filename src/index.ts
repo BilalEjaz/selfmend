@@ -41,9 +41,33 @@ export { configSchema, type SelfmendConfig } from "./config/schema.js";
 export { defaultConfig } from "./config/defaults.js";
 
 // Heal-event transport shape, for consumers building their own reporting on top
-// of the `selfmend-heal` attachments.
+// of the `selfmend-heal` attachments. The union + both arms are PUBLIC so a
+// consumer can type `onHeal` (the wrapPage opt below takes a SelfmendEvent).
 export {
   HEAL_ATTACHMENT_NAME,
   type HealEvent,
+  type HealedEvent,
+  type RefusedEvent,
+  type SelfmendEvent,
   attachHealEvent,
 } from "./integration/events.js";
+
+// The runner-agnostic core (WRAP-01/02/03, D-01/D-02): wrap ANY Playwright Page
+// outside the @playwright/test fixture (Cucumber, Mocha, a plain script). The
+// fixture is one adapter on the same seam.
+//
+//   import { wrapPage, resetScope } from "selfmend";
+//   this.page = wrapPage(rawPage, { store, scope: () => ({ suite, test }) });
+//
+// `wrapPage` returns the BARE wrapped Page (drop-in, D-01); `resetScope(page)`
+// forces an occurrence reset for same-scope retries (WeakMap-backed, D-06).
+export {
+  wrapPage,
+  resetScope,
+  type WrapPageOptions,
+  type Scope,
+  type ScopeSource,
+} from "./integration/wrap-page.js";
+
+// The store type a consumer constructs and passes to `wrapPage({ store })`.
+export { BaselineStore } from "./store/store.js";
