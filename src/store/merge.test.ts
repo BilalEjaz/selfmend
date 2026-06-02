@@ -1,8 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { mergeShards, refresh, prune } from "./merge.js";
+import { mergeShards, refresh, prune, mergeBaselines } from "./merge.js";
 import { STORE_FORMAT_VERSION } from "./schema.js";
 import type { BaselineFile, ShardFile } from "./schema.js";
 import type { Fingerprint } from "../matching/types.js";
+import { BaselineStore } from "./store.js";
 
 function fp(over: Partial<Fingerprint> = {}): Fingerprint {
   return {
@@ -130,5 +131,68 @@ describe("prune (D-09 remove-unseen, separate pure fn)", () => {
     // The pure prune signature accepts exactly two args; the COMPLETE-RUN gate
     // + SELFMEND_PRUNE opt-in are the reporter's job (Plan 03-03), not here.
     expect(prune.length).toBe(2);
+  });
+});
+
+describe("mergeBaselines (STORE-03 deterministic, order-independent)", () => {
+  /** Build a one-or-more-key BaselineStore for merge inputs. */
+  function storeOf(entries: Record<string, Fingerprint>): BaselineStore {
+    const store = new BaselineStore();
+    for (const [key, fingerprint] of Object.entries(entries)) {
+      store.set(key, fingerprint);
+    }
+    return store;
+  }
+
+  it("combines DISJOINT stores losing no entry from either side", () => {
+    const a = storeOf({ k1: fp({ text: "one" }) });
+    const b = storeOf({ k2: fp({ text: "two" }) });
+
+    const merged = mergeBaselines(a, b);
+    expect(merged.has("k1")).toBe(true);
+    expect(merged.has("k2")).toBe(true);
+    expect(merged.get("k1")).toEqual(fp({ text: "one" }));
+    expect(merged.get("k2")).toEqual(fp({ text: "two" }));
+  });
+
+  it("is order-independent over DISJOINT inputs (merge(a,b) deep-equals merge(b,a))", () => {
+    const a = storeOf({ k1: fp({ text: "one" }) });
+    const b = storeOf({ k2: fp({ text: "two" }) });
+
+    expect(mergeBaselines(a, b).toBaselineFile()).toEqual(
+      mergeBaselines(b, a).toBaselineFile(),
+    );
+  });
+
+  it("resolves a same-key conflict deterministically, identical regardless of order (OVERLAPPING)", () => {
+    const a = storeOf({ dup: fp({ text: "from-A" }) });
+    const b = storeOf({ dup: fp({ text: "from-B" }) });
+
+    const ab = mergeBaselines(a, b).toBaselineFile();
+    const ba = mergeBaselines(b, a).toBaselineFile();
+
+    // Same winner both ways, and it is one of the two captured values (not a field merge).
+    expect(ab).toEqual(ba);
+    expect(["from-A", "from-B"]).toContain(ab.entries.dup!.text);
+    // The deterministic value-derived rule matches mergeShards (max compare key).
+    const viaShards = mergeShards([
+      shard({ dup: fp({ text: "from-A" }) }, []),
+      shard({ dup: fp({ text: "from-B" }) }, []),
+    ]);
+    expect(ab.entries.dup).toEqual(viaShards.captures.dup);
+  });
+
+  it("collapses identical captures for the same key to that one value", () => {
+    const a = storeOf({ same: fp({ text: "x" }) });
+    const b = storeOf({ same: fp({ text: "x" }) });
+    const merged = mergeBaselines(a, b).toBaselineFile();
+    expect(merged.entries.same).toEqual(fp({ text: "x" }));
+  });
+
+  it("returns an empty store for zero arguments and a passthrough for one", () => {
+    expect(mergeBaselines().toBaselineFile().entries).toEqual({});
+
+    const only = storeOf({ k: fp({ text: "solo" }) });
+    expect(mergeBaselines(only).toBaselineFile()).toEqual(only.toBaselineFile());
   });
 });

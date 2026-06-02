@@ -8,12 +8,15 @@ import {
   baselinePath,
   deleteShards,
   loadBaseline,
+  loadCommittedBaseline,
   readShards,
+  saveBaseline,
   shardPath,
   shardsDir,
   writeShard,
 } from "./persistence.js";
 import { STORE_FORMAT_VERSION, type ShardFile } from "./schema.js";
+import { BaselineStore } from "./store.js";
 import type { Fingerprint } from "../matching/types.js";
 
 /** A minimal, schema-valid fingerprint for round-trip assertions. */
@@ -131,7 +134,7 @@ describe("writeShard / readShards round-trip", () => {
   });
 });
 
-describe("atomicWrite + loadBaseline round-trip (CAP-02)", () => {
+describe("atomicWrite + loadCommittedBaseline round-trip (CAP-02)", () => {
   it("atomicWrite then read returns exactly the bytes; no leftover .tmp", async () => {
     const root = path.resolve(dir);
     const bp = baselinePath(root);
@@ -146,7 +149,7 @@ describe("atomicWrite + loadBaseline round-trip (CAP-02)", () => {
     expect(siblings.some((f: string) => f.includes(".tmp"))).toBe(false);
   });
 
-  it("a store written via atomicWrite reloads via loadBaseline with fingerprints intact", async () => {
+  it("a store written via atomicWrite reloads via loadCommittedBaseline with fingerprints intact", async () => {
     const root = path.resolve(dir);
     const { serialize } = await import("./serialize.js");
     const key = "spec.ts t > case page.locator(button) 0";
@@ -158,16 +161,16 @@ describe("atomicWrite + loadBaseline round-trip (CAP-02)", () => {
     await mkdir(path.dirname(bp), { recursive: true });
     await atomicWrite(bp, serialize(baseline));
 
-    const store = await loadBaseline(root);
+    const store = await loadCommittedBaseline(root);
     expect(store.has(key)).toBe(true);
     expect(store.get(key)).toEqual(fp());
   });
 });
 
-describe("loadBaseline fail-soft (Pitfall 5)", () => {
+describe("loadCommittedBaseline fail-soft (Pitfall 5)", () => {
   it("missing baseline file loads as the EMPTY store, never throws", async () => {
     const root = path.resolve(dir);
-    const store = await loadBaseline(root);
+    const store = await loadCommittedBaseline(root);
     expect(store.size).toBe(0);
   });
 
@@ -176,14 +179,14 @@ describe("loadBaseline fail-soft (Pitfall 5)", () => {
     const bp = baselinePath(root);
     await mkdir(path.dirname(bp), { recursive: true });
     await writeFile(bp, "}{ not json at all", "utf8");
-    expect((await loadBaseline(root)).size).toBe(0);
+    expect((await loadCommittedBaseline(root)).size).toBe(0);
 
     await writeFile(
       bp,
       JSON.stringify({ version: 999, entries: {} }),
       "utf8",
     );
-    expect((await loadBaseline(root)).size).toBe(0);
+    expect((await loadCommittedBaseline(root)).size).toBe(0);
   });
 });
 
@@ -254,5 +257,82 @@ describe("deleteShards (D-12 transient cleanup)", () => {
     await expect(readdir(sd)).rejects.toThrow();
     // Second delete on a now-missing dir is a no-op (never throws).
     await deleteShards(sd);
+  });
+});
+
+/**
+ * STORE-01 / STORE-02: the standalone, path-based public loadBaseline(path) and
+ * saveBaseline(path, store), decoupled from the reporter and shards. These take
+ * a LITERAL file path the consumer owns (no .selfmend containment clamp), wrap
+ * atomicWrite + serialize + parseBaseline, and save REFRESH-AND-ADD only (never
+ * prune), so a key captured before a later save that did not recapture it
+ * survives.
+ */
+describe("saveBaseline / loadBaseline (path-based, STORE-01)", () => {
+  /** Seed a one-key store with a stable identity key. */
+  function storeWith(key: string, fingerprint: Fingerprint): BaselineStore {
+    const store = new BaselineStore();
+    store.set(key, fingerprint);
+    return store;
+  }
+
+  it("saveBaseline over a fresh path creates the file; loadBaseline reads it back", async () => {
+    const target = path.join(dir, "custom", "my-baseline.json");
+    const store = storeWith("k1", fp({ text: "first" }));
+    await saveBaseline(target, store);
+
+    // The file exists at the literal caller path (no .selfmend subdir injected).
+    const reloaded = await loadBaseline(target);
+    expect(reloaded.has("k1")).toBe(true);
+    expect(reloaded.get("k1")).toEqual(fp({ text: "first" }));
+  });
+
+  it("round-trips byte-stable serialize() output (2-space, trailing newline)", async () => {
+    const { serialize } = await import("./serialize.js");
+    const target = path.join(dir, "rt.json");
+    const store = storeWith("k1", fp({ text: "rt" }));
+    await saveBaseline(target, store);
+
+    const onDisk = await readFile(target, "utf8");
+    const expected = serialize({
+      version: STORE_FORMAT_VERSION,
+      entries: { k1: fp({ text: "rt" }) },
+    });
+    expect(onDisk).toBe(expected);
+    expect(onDisk.endsWith("\n")).toBe(true);
+  });
+
+  it("a missing file passed to loadBaseline yields an EMPTY store, never throws", async () => {
+    const store = await loadBaseline(path.join(dir, "does-not-exist.json"));
+    expect(store.size).toBe(0);
+  });
+
+  it("a malformed file passed to loadBaseline yields an EMPTY store, never throws", async () => {
+    const target = path.join(dir, "bad.json");
+    await writeFile(target, "}{ not json at all", "utf8");
+    expect((await loadBaseline(target)).size).toBe(0);
+  });
+});
+
+describe("saveBaseline survival invariant (STORE-02, refresh-only never prune)", () => {
+  it("a key saved earlier survives a later save that captured nothing for it", async () => {
+    const target = path.join(dir, "survive.json");
+
+    // Run 1: capture K1 and save.
+    const first = new BaselineStore();
+    first.set("K1", fp({ text: "k1-value" }));
+    await saveBaseline(target, first);
+
+    // Run 2: a SECOND store that captured only K2, nothing for K1. Saving it must
+    // ADD K2 while LEAVING K1 in place (refresh-and-add, never auto-prune).
+    const second = new BaselineStore();
+    second.set("K2", fp({ text: "k2-value" }));
+    await saveBaseline(target, second);
+
+    const merged = await loadBaseline(target);
+    expect(merged.has("K1")).toBe(true);
+    expect(merged.has("K2")).toBe(true);
+    expect(merged.get("K1")).toEqual(fp({ text: "k1-value" }));
+    expect(merged.get("K2")).toEqual(fp({ text: "k2-value" }));
   });
 });
