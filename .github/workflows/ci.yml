@@ -79,7 +79,7 @@ jobs:
       - name: Unit tests (vitest)
         run: npm test
 
-      # Integration suite — INCLUDES tests/offline.spec.ts, the PRIV-01
+      # Integration suite, INCLUDES tests/offline.spec.ts, the PRIV-01
       # zero-egress offline proof.
       - name: Integration tests (Playwright, incl. PRIV-01 offline)
         run: npm run test:e2e
@@ -88,7 +88,7 @@ jobs:
         run: npm run build
 
       # Publish-surface validation runs ONCE (latest node + latest Playwright)
-      # to cut redundant noise — it is version-independent of the matrix legs.
+      # to cut redundant noise, it is version-independent of the matrix legs.
       # lint:types (scripts/check-types.mjs) ignores ONLY the EXPECTED node10
       # skull on the ./reporter subpath (legacy node10 cannot resolve exports
       # subpaths; engines.node>=22 makes it irrelevant) so it is a clean
@@ -100,6 +100,15 @@ jobs:
       - name: Lint type resolution (attw)
         if: matrix.node == 24 && matrix.playwright == '1.60.0'
         run: npm run lint:types
+
+      # Docs smoke check (Phase 7 criterion 3): build the package, then
+      # type-check the three README example recipes against the published API.
+      # Runs once on the publish-validation leg because the example type-check
+      # is version-independent of the Playwright matrix. If a recipe stops
+      # compiling against the published types, this fails CI.
+      - name: Check examples (docs smoke)
+        if: matrix.node == 24 && matrix.playwright == '1.60.0'
+        run: npm run check:examples
 
       - name: Pack dry-run (tarball surface)
         if: matrix.node == 24 && matrix.playwright == '1.60.0'
