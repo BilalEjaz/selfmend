@@ -1,4 +1,4 @@
-import { errors, type Locator, type Page, type TestInfo } from "@playwright/test";
+import { errors, type Locator, type Page } from "@playwright/test";
 
 import type { SelfmendConfig } from "../config/schema.js";
 import { captureFingerprint } from "../fingerprint/capture.js";
@@ -7,7 +7,7 @@ import { decide } from "../matching/decision.js";
 import { score } from "../matching/scoring.js";
 import type { ScoredCandidate } from "../matching/types.js";
 import type { BaselineStore } from "../store/store.js";
-import { attachHealEvent, attachRefusedEvent } from "./events.js";
+import type { SelfmendEvent } from "./events.js";
 
 /**
  * The Locator Proxy heal loop (HEAL-01, HEAL-02, INST-02).
@@ -96,16 +96,33 @@ export interface HealContext {
   store: BaselineStore;
   /** Resolved, on-by-default config (enabled, threshold, testIdAttr). */
   config: SelfmendConfig;
-  /** Active test info, for the worker -> main heal-event attachment. */
-  testInfo: TestInfo;
-  /** Stable test-file identity component for the store key. */
-  testFile: string;
   /**
-   * File-rooted, stable test title (`testInfo.titlePath` joined) — the second
-   * component of the cross-run identity key (D-04). Together with `testFile` it
-   * scopes a selector's occurrence counter to one test.
+   * Pluggable, best-effort heal-event transport (D-08). The core no longer
+   * references the Playwright test-info object: it hands every accepted heal /
+   * refused attempt to `emit` and lets the adapter decide where it goes (the
+   * `@playwright/test` adapter builds `emit` from the reporter attach path;
+   * `wrapPage` builds it from the fire-and-forget `onHeal`). `emit` is
+   * observability only and must NEVER suppress, slow, or stall the run: a
+   * throwing/rejecting `emit` is swallowed by the proxy's guard so the ORIGINAL
+   * error always propagates (T-05-01).
    */
-  testTitle: string;
+  emit: (event: SelfmendEvent) => void | Promise<void>;
+  /**
+   * The suite-level identity component (D-09): mapped to the store key's
+   * `testFile` arg so the cross-run key `suite :: test :: selector ::
+   * occurrence` stays byte-identical to the pre-refactor `testFile :: ...`. The
+   * `@playwright/test` adapter sets `suite` from the test file path; `wrapPage`
+   * sets it from the caller's live `scope().suite` (coarse `""` by default).
+   * NEVER derived from the page URL.
+   */
+  suite: string;
+  /**
+   * The test-level identity component (D-09): mapped to the store key's
+   * `testTitle` arg. The `@playwright/test` adapter sets `test = titlePath`
+   * joined (as today); `wrapPage` sets it from `scope().test` (coarse `""`).
+   * Together with `suite` it scopes a selector's occurrence counter to one test.
+   */
+  test: string;
   /**
    * Bounded replay budget (ms). The real attempt keeps the user's configured
    * timeout (do not shorten auto-wait semantics); the replay is capped so a
@@ -204,12 +221,12 @@ export function wrapLocator(
   // is identical on a green run and a later broken run (the element need not
   // resolve to be counted). Mark the key seen so the reporter's prune knows it
   // was executed even if no fingerprint is ever captured for it (D-09).
-  const contentKey = `${ctx.testFile} ${ctx.testTitle} ${selector}`;
+  const contentKey = `${ctx.suite} ${ctx.test} ${selector}`;
   const occurrence = ctx.nextOccurrence(contentKey);
   const key = ctx.store.identify(
     selector,
-    ctx.testFile,
-    ctx.testTitle,
+    ctx.suite,
+    ctx.test,
     occurrence,
   );
   ctx.store.markSeen(key);
@@ -394,15 +411,15 @@ async function actionOrHeal(
         decision.reason === "ambiguous"
       ) {
         try {
-          await attachRefusedEvent(ctx.testInfo, {
+          await ctx.emit({
             kind: "refused",
-            testName: ctx.testInfo.title,
+            testName: ctx.test,
             originalSelector: selector,
             reason: decision.reason,
             bestScore: decision.bestScore,
           });
         } catch {
-          // Observability is best-effort; never let a failed attach mask `err`.
+          // Observability is best-effort; never let a failed emit mask `err`.
         }
       }
       throw err;
@@ -429,14 +446,21 @@ async function actionOrHeal(
       throw err;
     }
 
-    // Attach the heal event ONLY after the replay actually succeeded, so the
+    // Emit the heal event ONLY after the replay actually succeeded, so the
     // end-of-run summary never over-reports a heal that did not stick (WR-03).
-    await attachHealEvent(ctx.testInfo, {
-      testName: ctx.testInfo.title,
-      originalSelector: selector,
-      healedTarget: decision.newSelector,
-      score: decision.event.score,
-    });
+    // Best-effort: a throwing/rejecting emit must NOT turn a successful heal
+    // into a failure (D-08), so guard it and return the green result regardless.
+    try {
+      await ctx.emit({
+        kind: "healed",
+        testName: ctx.test,
+        originalSelector: selector,
+        healedTarget: decision.newSelector,
+        score: decision.event.score,
+      });
+    } catch {
+      // Observability is best-effort; a failed emit never fails a real heal.
+    }
     return result;
   }
 }

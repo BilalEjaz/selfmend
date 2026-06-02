@@ -94,7 +94,7 @@ describe("emit seam (D-08): pluggable best-effort transport", () => {
 
     await expect(wrapped.click()).rejects.toThrow(/timed out/);
     expect(events).toHaveLength(1);
-    expect(events[0].kind).toBe("refused");
+    expect(events[0]?.kind).toBe("refused");
   });
 
   it("a throwing emit does NOT suppress the original error (best-effort guard)", async () => {

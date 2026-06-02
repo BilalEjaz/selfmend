@@ -14,6 +14,11 @@ import {
   describeArgs,
   type HealContext,
 } from "./locator-proxy.js";
+import {
+  attachHealEvent,
+  attachRefusedEvent,
+  type SelfmendEvent,
+} from "./events.js";
 
 /**
  * The page-override healing fixture (INST-02, D-03, D-04, D-08).
@@ -153,13 +158,27 @@ export const healingFixture = base.extend<
     // File-rooted, stable test title (D-04). titlePath is [file, ...describes,
     // test] — joining it scopes the occurrence key to this exact test.
     const testTitle = testInfo.titlePath.join(" > ");
+    // The @playwright/test adapter for the pluggable `emit` seam (D-08): map the
+    // SelfmendEvent union back onto the EXISTING testInfo.attach transport, so
+    // keys and attachments stay byte-identical to the pre-refactor proxy
+    // (WRAP-04 zero behaviour change). `kind` discriminates the two arms; a
+    // missing kind is a healed event (back-compat).
+    const emit = async (event: SelfmendEvent): Promise<void> => {
+      if (event.kind === "refused") {
+        await attachRefusedEvent(testInfo, event);
+      } else {
+        await attachHealEvent(testInfo, event);
+      }
+    };
     const wrapped = wrapPage(page, nextOccurrence, () => ({
       page,
       store: selfmendStore,
       config: selfmendConfig,
-      testInfo,
-      testFile: testInfo.file,
-      testTitle,
+      emit,
+      // D-09 adapter mapping: suite = testInfo.file, test = file-rooted title,
+      // EXACTLY as the old testFile/testTitle, so committed baselines match.
+      suite: testInfo.file,
+      test: testTitle,
       // Bounded replay budget: cap so a flaky heal target cannot balloon the
       // per-action wall-clock (FINDINGS (b)). Mirror the configured action
       // timeout, falling back to a safe fixed cap.
