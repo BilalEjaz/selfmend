@@ -14,6 +14,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Nothing yet.
 
+## [0.2.1] - 2026-06-02
+
+Metadata and CI only. No code or API changes: 0.2.1 is identical to 0.2.0 at
+runtime.
+
+### Changed
+
+- npm package description and keywords now reflect that selfmend heals outside
+  `@playwright/test` (Cucumber, Mocha, Jest, plain scripts), so the registry page
+  matches what 0.2.0 actually shipped. The 0.2.0 metadata still described the
+  v0.1.x `@playwright/test`-only scope.
+
+### Fixed
+
+- CI matrix no longer hangs. The `node 24` plus old-Playwright (`1.42` / `1.49`)
+  cells were excluded as redundant (the `node 22` row already proves all three
+  Playwright versions and `node 24 x 1.60` proves node 24), and a 20 minute
+  per-job timeout was added so a stuck browser install fails fast instead of
+  sitting until GitHub's 6 hour ceiling.
+
 ## [0.2.0] - 2026-06-02
 
 selfmend now heals outside the `@playwright/test` runner. If your framework gives
@@ -161,5 +181,7 @@ inside your own CI, with a hard never-false-green guarantee.
 - `selectOption` / `setInputFiles` value-object payloads on the replay path are
   a known latent edge case (currently tolerated). See README "Limitations".
 
-[0.2.0]: https://github.com/u0966572/selfmend/releases/tag/v0.2.0
-[0.1.0]: https://github.com/u0966572/selfmend/releases/tag/v0.1.0
+[0.2.1]: https://github.com/BilalEjaz/selfmend/releases/tag/v0.2.1
+[0.2.0]: https://github.com/BilalEjaz/selfmend/releases/tag/v0.2.0
+[0.1.1]: https://github.com/BilalEjaz/selfmend/releases/tag/v0.1.1
+[0.1.0]: https://github.com/BilalEjaz/selfmend/releases/tag/v0.1.0

@@ -1,7 +1,7 @@
 {
   "name": "selfmend",
-  "version": "0.2.0",
-  "description": "Self-healing Playwright locators that run fully offline inside your own CI: no API key, no telemetry, no false-green tests.",
+  "version": "0.2.1",
+  "description": "Self-healing Playwright locators for any framework that drives a Playwright Page: Cucumber, Mocha, Jest, plain scripts, or @playwright/test. Fully offline, no API key, no telemetry, never a false-green test.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/BilalEjaz/selfmend.git"
@@ -13,6 +13,11 @@
   "keywords": [
     "playwright",
     "playwright-test",
+    "cucumber",
+    "mocha",
+    "jest",
+    "bdd",
+    "runner-agnostic",
     "self-healing",
     "selfhealing",
     "locators",

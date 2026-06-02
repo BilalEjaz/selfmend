@@ -3,8 +3,10 @@ name: CI
 # Compatibility-matrix CI (D-05): the regression net AND the cross-version
 # Playwright compatibility proof. Runs the full suite (typecheck + vitest unit +
 # Playwright integration incl. the PRIV-01 offline test + build) across
-# node 22/24 x @playwright/test 1.42.0/1.60.0, then validates the publish
-# surface (publint + attw + npm pack --dry-run) on a single gated leg.
+# node 22 x @playwright/test 1.42.0/1.49.1/1.60.0 plus node 24 x 1.60.0, then
+# validates the publish surface (publint + attw + check:examples + npm pack
+# --dry-run) on the single gated node 24 x 1.60.0 leg. The node 24 x old-Playwright
+# cells are excluded as redundant (see the matrix exclude block below).
 #
 # RELEASE IS MANUAL (D-06): this workflow holds no npm auth token and has no
 # publish step. The first release is performed by the maintainer out-of-band
@@ -24,6 +26,12 @@ on:
 jobs:
   test:
     runs-on: ${{ matrix.os }}
+    # Backstop: a single leg must never hang for hours. The browser-install step
+    # on the node 24 + old-Playwright combos was observed hanging on the runner
+    # (the binary download / --with-deps apt step), sitting until GitHub's 6h
+    # ceiling. A tight job timeout turns any such hang into a fast, visible red
+    # instead of a zombie that blocks the whole run.
+    timeout-minutes: 20
     strategy:
       # fail-fast off: we want every leg's result so a single-version failure
       # does not mask the compatibility picture across the whole matrix.
@@ -39,6 +47,17 @@ jobs:
         # 1.60 switched to `_apiName`) accepts it. CI proves the floor, latest, and a
         # mid point. Honest-floor rule (RELEASING.md): declare only what CI proves green.
         playwright: ["1.42.0", "1.49.1", "1.60.0"]
+        # Trim the redundant cells (and the flaky node 24 + old-Playwright
+        # browser install). Compatibility is fully covered without full factorial:
+        # the node 22 row proves all three Playwright versions (incl. the 1.42
+        # floor), and node 24 x 1.60 proves node 24 AND runs the publish-surface
+        # gate (publint + attw + check:examples + pack). node 24 x {1.42,1.49}
+        # add no unique coverage, so they are excluded.
+        exclude:
+          - node: 24
+            playwright: "1.42.0"
+          - node: 24
+            playwright: "1.49.1"
     steps:
       - uses: actions/checkout@v4
 
