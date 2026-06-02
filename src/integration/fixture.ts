@@ -4,7 +4,7 @@ import { defaultConfig } from "../config/defaults.js";
 import type { SelfmendConfig } from "../config/schema.js";
 import { BaselineStore } from "../store/store.js";
 import {
-  loadBaseline,
+  loadCommittedBaseline,
   writeShard,
   shardPath,
 } from "../store/persistence.js";
@@ -106,7 +106,7 @@ export const healingFixture = base.extend<
   selfmendStore: [
     async ({}, use, workerInfo) => {
       const rootDir = workerInfo.config.rootDir;
-      const store = await loadBaseline(rootDir);
+      const store = await loadCommittedBaseline(rootDir);
       await use(store);
       // Worker teardown: lock-free per-worker shard flush.
       await writeShard(

@@ -71,3 +71,11 @@ export {
 
 // The store type a consumer constructs and passes to `wrapPage({ store })`.
 export { BaselineStore } from "./store/store.js";
+
+// Standalone persistence building blocks (STORE-01/02/03): persist + reload a
+// baseline at a LITERAL file path the consumer owns, and merge per-worker
+// baselines deterministically, all decoupled from the reporter and shard
+// machinery. `saveBaseline` is refresh-and-add only (never auto-prunes);
+// `mergeBaselines` is order-independent over overlapping and disjoint inputs.
+export { loadBaseline, saveBaseline } from "./store/persistence.js";
+export { mergeBaselines } from "./store/merge.js";

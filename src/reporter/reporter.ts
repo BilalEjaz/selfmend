@@ -21,7 +21,7 @@ import {
   atomicWrite,
   baselinePath,
   deleteShards,
-  loadBaseline,
+  loadCommittedBaseline,
   readShards,
   shardsDir,
 } from "../store/persistence.js";
@@ -149,7 +149,7 @@ export default class SelfmendReporter implements Reporter {
 
     // Load the existing committed baseline (fail-soft) and refresh it (D-08,
     // always, overwrite-on-recapture, never destructive).
-    const baselineStore = await loadBaseline(this.rootDir);
+    const baselineStore = await loadCommittedBaseline(this.rootDir);
     let next = refresh(baselineStore.toBaselineFile(), merged);
 
     // Destructive prune is gated: complete unfiltered run AND passed AND the
