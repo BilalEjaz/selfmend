@@ -1,0 +1,26 @@
+{
+  // Strict tsconfig scoped to examples/. It type-checks the README recipes
+  // against the BUILT selfmend package: the example imports of "selfmend"
+  // self-resolve through the package's own exports map (package.json) once
+  // `npm run build` has produced dist/, so the recipes are proven to compile
+  // against the published types, not the src/ source. The Cucumber/Mocha/Jest
+  // hook symbols resolve through the type-only declarations in examples/shims.
+  //
+  // This config is standalone (it does NOT extend tsconfig.json, whose
+  // rootDir:src + include:src/**/*.ts are wrong for examples/). It emits
+  // nothing (noEmit): it is a pure type gate.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": true,
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["examples/**/*.ts", "examples/shims/**/*.d.ts"]
+}

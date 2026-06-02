@@ -66,7 +66,8 @@
     "typecheck": "tsc --noEmit",
     "lint:pack": "publint --pack npm",
     "lint:types": "node scripts/check-types.mjs",
-    "verify": "npm run build && npm run lint:pack && npm run lint:types && npm run typecheck && npm test",
+    "check:examples": "node scripts/check-examples.mjs",
+    "verify": "npm run build && npm run lint:pack && npm run lint:types && npm run typecheck && npm run check:examples && npm test",
     "prepublishOnly": "npm run build && npm run lint:pack"
   },
   "peerDependencies": {

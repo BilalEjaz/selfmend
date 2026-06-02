@@ -10,17 +10,22 @@
 // Each declaration models ONLY the symbols the recipes reference, and only
 // closely enough that the selfmend wiring type-checks. It is deliberately
 // minimal, not a faithful model of the framework.
+//
+// This file has NO top-level import or export, so it stays a global script:
+// that is what makes `declare module "@cucumber/cucumber"` register as an
+// AMBIENT module declaration under moduleResolution nodenext (a top-level
+// import/export would turn the file into a module and the ambient declaration
+// would no longer be globally visible). The Playwright Page type is referenced
+// via an inline `import(...)` type, which does not make the file a module.
 
 // Cucumber (@cucumber/cucumber): the hook + step symbols the recipe wires
 // selfmend into, plus a minimal World the recipe attaches the wrapped page to.
 declare module "@cucumber/cucumber" {
-  import type { Page } from "@playwright/test";
-
   // The per-scenario World. The recipe stores the wrapped page and the two
   // stable identity strings (feature name + scenario name) that scope() reads
   // live. `page` is optional because it is assigned in a Before hook.
   export interface SelfmendWorld {
-    page?: Page;
+    page?: import("@playwright/test").Page;
     featureName: string;
     scenarioName: string;
   }
@@ -44,12 +49,8 @@ declare module "@cucumber/cucumber" {
 // shim covers the single mocha-jest recipe. Declared as ambient globals because
 // that mirrors how both runners inject them (Mocha via --ui bdd globals, Jest
 // via its globals injection).
-declare global {
-  function before(fn: () => void | Promise<void>): void;
-  function after(fn: () => void | Promise<void>): void;
-  function beforeEach(fn: () => void | Promise<void>): void;
-  function describe(name: string, fn: () => void): void;
-  function it(name: string, fn: () => void | Promise<void>): void;
-}
-
-export {};
+declare function before(fn: () => void | Promise<void>): void;
+declare function after(fn: () => void | Promise<void>): void;
+declare function beforeEach(fn: () => void | Promise<void>): void;
+declare function describe(name: string, fn: () => void): void;
+declare function it(name: string, fn: () => void | Promise<void>): void;
