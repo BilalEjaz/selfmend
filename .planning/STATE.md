@@ -4,14 +4,14 @@ milestone: v0.2
 milestone_name: Runner-Agnostic Healing
 status: verifying
 stopped_at: Phase 5 context gathered
-last_updated: "2026-06-02T15:45:12.232Z"
+last_updated: "2026-06-02T16:08:42.206Z"
 last_activity: 2026-06-02
 progress:
   total_phases: 7
-  completed_phases: 6
+  completed_phases: 7
   total_plans: 19
-  completed_plans: 18
-  percent: 86
+  completed_plans: 19
+  percent: 100
 ---
 
 # Project State
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-31)
 
 **Core value:** When a test fails only because a selector changed (not because the app is actually broken), the suite keeps running and tells the team exactly what changed, without any data leaving their CI.
-**Current focus:** Phase 06, Standalone Persistence & Output
+**Current focus:** Phase 07, Recipes & Docs (v0.2.0 milestone close)
 
 ## Current Position
 
-Phase: 06 (Standalone Persistence & Output), COMPLETE
+Phase: 07 (Recipes & Docs), COMPLETE
 Plan: 2 of 2 complete
-Status: Phase complete — ready for verification
+Status: v0.2.0 milestone work complete — ready for verification (maintainer bumps package.json to 0.2.0 + tags v0.2.0 at release)
 Last activity: 2026-06-02
 
 ## Performance Metrics
@@ -71,6 +71,7 @@ Last activity: 2026-06-02
 | Phase 06 P01 | 16 | 3 tasks | 8 files |
 | Phase 06 P02 | 8 min | 3 tasks | 5 files |
 | Phase 07 P01 | 12 min | 3 tasks | 8 files |
+| Phase 07 P02 | 10 | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -91,6 +92,7 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 6 P01]: Standalone persistence slice. Public loadBaseline(path)/saveBaseline(path,store) refresh-and-add only (never prune) + mergeBaselines(...stores) deterministic fold over mergeShards. Internal rootDir loader renamed loadCommittedBaseline; research cited ONE caller (reporter.ts) but fixture.ts was a SECOND silent same-signature caller, fixed (Rule 1). 151 unit + 5 e2e green; matching core untouched; no new deps; store format v1 unchanged. STORE-01/02/03 done.
 - [Phase ?]: [Phase 6 P02]: Output slice. renderHealSummary(events) extracted as the SINGLE shared pure renderer in src/reporter/render.ts; reporter.render() delegates (renderHealedBox count 0), proven byte-identical via a toBe full-string-equality snapshot feeding the same events to a real reporter and the pure fn (OUT-02). stripAnsi re-exported from render.js so reporter.test.ts imports keep working. onHeal confirmed in raw mode: healed + the three post-scoring refusals (no-candidates/below-floor/ambiguous) delivered, no-fingerprint silence asserted, NO production change since Phase 5 already wired both emit arms (OUT-01). renderHealSummary exported from index.ts. 163 unit + 29 e2e green; matching core untouched; no new deps.
 - [Phase ?]: [Phase 7 P01]: Compilable examples spine (DOC-01 engineering half), examples import only published API, type-only shim no new deps, check:examples gate in verify+CI, selfmend self-resolves via exports map, shim must be a global script for nodenext, src untouched, criterion 3 machine-checked.
+- [Phase ?]: Phase 7 P02: DOC-01 closed; v0.2.0 docs milestone complete. README runner-agnostic recipes (Plain script, Cucumber, Mocha / Jest) embed examples byte-for-byte; raw-mode never-false-green + Honest limits sections added; check:readme byte-sync gate wired into verify; CHANGELOG cut to public 0.2.0 (version stays 0.1.2, maintainer bumps at release); src untouched; verify + 29 e2e green.
 
 ### Pending Todos
 
@@ -112,6 +114,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-02T15:43:52.738Z
+Last session: 2026-06-02T16:07:55.372Z
 Stopped at: Phase 5 context gathered
 Resume file: None

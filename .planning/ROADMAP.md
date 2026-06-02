@@ -25,7 +25,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 5: Runner-Agnostic Core** - Lift the internal `wrapPage` into a public `wrapPage(page, opts)` with caller-supplied `scope()` identity and pluggable event transport, then refactor the `@playwright/test` fixture onto it with zero behaviour change (completed 2026-06-02)
 - [x] **Phase 6: Standalone Persistence & Output** - Expose `loadBaseline`/`saveBaseline`/`mergeBaselines` and the `onHeal` callback + `renderHealSummary` so raw frameworks persist baselines and print the boxed report with no Playwright reporter (completed 2026-06-02)
-- [ ] **Phase 7: Recipes & Docs** - Document `wrapPage` with working Cucumber, Mocha/Jest, and plain-script recipes plus the honest limits and never-false-green guarantee
+- [x] **Phase 7: Recipes & Docs** - Document `wrapPage` with working Cucumber, Mocha/Jest, and plain-script recipes plus the honest limits and never-false-green guarantee (completed 2026-06-02)
 
 ## Phase Details
 
@@ -131,7 +131,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Each recipe is runnable as written (the code blocks compile against the published API surface, validated by a docs/example smoke check)
 **Plans**: 2 plans
 - [x] 07-01-PLAN.md, Compilable examples spine: 3 recipe example files (Cucumber/Mocha-Jest/plain-script) + type-only framework shims + tsconfig.examples.json + check:examples smoke-check wired into CI (criterion 3, DOC-01)
-- [ ] 07-02-PLAN.md, README recipes + raw-mode never-false-green/honest-limits + CHANGELOG 0.2.0 + check:readme sync gate binding README blocks to the example files (criteria 1+2, DOC-01)
+- [x] 07-02-PLAN.md, README recipes + raw-mode never-false-green/honest-limits + CHANGELOG 0.2.0 + check:readme sync gate binding README blocks to the example files (criteria 1+2, DOC-01)
 
 ## Progress
 
@@ -146,4 +146,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 4. Offline Verification & Publish | 3/3 | Complete | 2026-05-31 |
 | 5. Runner-Agnostic Core | 2/2 | Complete   | 2026-06-02 |
 | 6. Standalone Persistence & Output | 2/2 | Complete   | 2026-06-02 |
-| 7. Recipes & Docs | 1/2 | In Progress|  |
+| 7. Recipes & Docs | 2/2 | Complete   | 2026-06-02 |
