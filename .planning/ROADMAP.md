@@ -101,7 +101,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Identity comes from a `scope()` callback returning two stable ids (suite, test) read at each locator creation, so a single long-lived page heals correctly as it moves between logical tests; the occurrence index resets per (suite, test) scope and re-running the same scope does not drift the index (retry-safe)
   3. Never-false-green holds in raw mode exactly as in fixture mode: a wrong or missing identity key produces a *missed* heal (the locator fails normally), never a wrong heal and never a false green, proven by a control test that supplies a bad/absent scope
   4. The `@playwright/test` fixture is refactored to delegate to the shared `wrapPage` core, and the existing 125 unit + 23 e2e tests all still pass with zero behaviour change for existing fixture users
-**Plans**: TBD
+**Plans**: 2 plans
+- [ ] 05-01-PLAN.md — Core seam refactor (HealContext pluggable emit + scope source, no testInfo) + public wrapPage/resetScope; TDD scope-lifetime (auto-reset + resetScope) + config merge (WRAP-01/02/03)
+- [ ] 05-02-PLAN.md — Refactor the @playwright/test fixture onto the shared core (zero-behaviour-change HARD gate, 125 unit + 23 e2e byte-identical) + raw-mode wrap-page integration proof (heal-green + never-false-green controls + throwing onHeal/scope fail-safe) (WRAP-04/WRAP-01)
 
 ### Phase 6: Standalone Persistence & Output
 **Goal**: A raw-framework user has every persistence and output building block the fixture+reporter gave `@playwright/test` users, exposed as standalone functions: load and save a baseline file directly, merge per-worker baselines safely for parallel runs, receive every heal event through an `onHeal` callback, and render the same boxed summary from collected events without any Playwright reporter.
@@ -138,6 +140,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 2. Trust Hardening | 2/2 | Complete   | 2026-05-31 |
 | 3. Persistence & Parallel-Worker Safety | 3/3 | Complete   | 2026-05-31 |
 | 4. Offline Verification & Publish | 3/3 | Complete | 2026-05-31 |
-| 5. Runner-Agnostic Core | 0/? | Not started | - |
+| 5. Runner-Agnostic Core | 0/2 | Planned | - |
 | 6. Standalone Persistence & Output | 0/? | Not started | - |
 | 7. Recipes & Docs | 0/? | Not started | - |
