@@ -12,19 +12,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Working on making selfmend usable outside the `@playwright/test` runner. Planned
-for the next release:
+Nothing yet.
 
-- `wrapPage(page, { store, onHeal })` so any framework that gives you a Playwright
-  page (Cucumber, Mocha, Jest, plain scripts) can heal. One call when you create
-  the page, then every locator on it heals with no test rewrites.
-- Standalone `loadBaseline(path)` and `saveBaseline(path, store)` so you can keep
-  the baseline yourself when there is no Playwright reporter, plus an `onHeal`
-  callback to log heals wherever you already log.
+## [0.2.0] - 2026-06-02
 
-Only Playwright is supported (not Cypress or Selenium), it heals one page at a
-time to start, and parallel runs merge per-worker baselines at the end. The
-never-false-green rule is unchanged. See the README Roadmap for details.
+selfmend now heals outside the `@playwright/test` runner. If your framework gives
+you a real Playwright `Page`, you can wrap it and every locator on it heals, with
+no test rewrites and no Playwright reporter.
+
+### Added
+
+- **`wrapPage(page, { store, config?, onHeal?, scope? })`** so any framework that
+  drives a real Playwright `Page` can heal: Cucumber, Mocha, Jest, or a plain
+  script. One call when you create the page, then every locator on it heals. Your
+  step definitions and page objects do not change.
+- **`scope()` identity callback** returning two stable ids `(suite, test)`, read
+  live each time a locator is created, so a long-lived page heals correctly as it
+  moves between logical tests. Identity comes from your runner, never from the
+  page URL.
+- **`resetScope(page)`** to restart occurrence counting for a same-scope retry, so
+  a re-run of the same scope does not drift the occurrence index. It is a safe
+  no-op on a page selfmend did not wrap.
+- **Standalone `loadBaseline(path)` and `saveBaseline(path, store)`** so you keep
+  the baseline yourself when there is no reporter. `saveBaseline` is
+  refresh-and-add only; it never auto-prunes.
+- **`mergeBaselines(...stores)`** to combine per-worker baselines deterministically
+  for parallel runs, so two workers never lose or corrupt each other's entries.
+  The result is order-independent.
+- **`onHeal` callback** that receives every heal event, both healed and
+  could-not-heal, so heals are loggable without a Playwright reporter, plus
+  **`renderHealSummary(events)`** to print the same boxed summary the reporter
+  prints from the events you collected.
+- **Runner-agnostic recipes in the README** (plain script, Cucumber, Mocha/Jest),
+  each backed by a real file under `examples/` that is type-checked against the
+  published API. A `check:readme` gate keeps the documented code byte-identical to
+  those files.
+
+### Changed
+
+- The `@playwright/test` fixture is refactored onto the same `wrapPage` core, a
+  single code path, with no behaviour change. The existing tests still pass
+  unchanged, so the import-swap install and the boxed reporter output are
+  byte-identical to 0.1.x.
+
+### Scope and guarantees
+
+- **Playwright Pages only.** Frameworks that drive a real Playwright `Page` are
+  supported; Cypress and Selenium use incompatible locator models and are out of
+  scope.
+- **Page-level only this milestone.** `wrapPage` heals one `Page`; popups and new
+  tabs each need their own `wrapPage`. Whole-`BrowserContext` wrapping is a later
+  add.
+- **Never-false-green is unchanged.** The same confidence floor and second-best
+  margin gates run in the pure core, so raw mode inherits the guarantee exactly.
+  A wrong or missing `scope()` key is a missed heal, never a wrong heal and never
+  a false green.
 
 ## [0.1.2] - 2026-06-01
 
@@ -119,4 +161,5 @@ inside your own CI, with a hard never-false-green guarantee.
 - `selectOption` / `setInputFiles` value-object payloads on the replay path are
   a known latent edge case (currently tolerated). See README "Limitations".
 
+[0.2.0]: https://github.com/u0966572/selfmend/releases/tag/v0.2.0
 [0.1.0]: https://github.com/u0966572/selfmend/releases/tag/v0.1.0
