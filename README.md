@@ -226,6 +226,36 @@ A `.gitignore` that matches this workflow:
   `timeout` key merged in. Playwright currently ignores the extra key, so there
   is no observed break, but it is a known latent edge case on the replay path.
 
+## Roadmap
+
+Today selfmend hooks into the `@playwright/test` runner. The next release lets you
+use it with any framework that drives a Playwright page directly, so Cucumber,
+Mocha, Jest and plain scripts can heal too.
+
+The plan is one call when you create your page:
+
+```ts
+const page = wrapPage(rawPage, { store, onHeal });
+```
+
+After that, every locator on that page heals, whatever your step definitions or
+page objects look like, with no rewrites. You load and save the baseline file
+yourself (in a `BeforeAll`/`AfterAll`, or wherever your framework gives you a
+hook), and you get a callback on every heal so you can log it into your own
+report. No Playwright reporter required.
+
+A few honest notes for when it lands:
+
+- It only works with Playwright. Cypress and Selenium drive the browser their own
+  way, so they are out of scope.
+- It heals one page at a time for now. Popups and new tabs get their own wrap,
+  and whole-context wrapping comes later.
+- Running in parallel, each worker keeps its own baseline and you merge them at
+  the end, so two workers never fight over one file.
+
+The safety rule does not change: if selfmend is not confident, your test fails the
+normal way. It will never click the wrong element to keep a run green.
+
 ## License
 
 MIT

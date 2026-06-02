@@ -10,6 +10,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > in a breaking way between minor releases (per SemVer, anything is allowed
 > pre-1.0). Such changes will always be called out in this changelog.
 
+## [Unreleased]
+
+Working on making selfmend usable outside the `@playwright/test` runner. Planned
+for the next release:
+
+- `wrapPage(page, { store, onHeal })` so any framework that gives you a Playwright
+  page (Cucumber, Mocha, Jest, plain scripts) can heal. One call when you create
+  the page, then every locator on it heals with no test rewrites.
+- Standalone `loadBaseline(path)` and `saveBaseline(path, store)` so you can keep
+  the baseline yourself when there is no Playwright reporter, plus an `onHeal`
+  callback to log heals wherever you already log.
+
+Only Playwright is supported (not Cypress or Selenium), it heals one page at a
+time to start, and parallel runs merge per-worker baselines at the end. The
+never-false-green rule is unchanged. See the README Roadmap for details.
+
 ## [0.1.2] - 2026-06-01
 
 ### Changed
