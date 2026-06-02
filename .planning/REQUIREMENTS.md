@@ -70,7 +70,7 @@ Current milestone. Open the engine to any framework that drives a real Playwrigh
 
 ### Docs
 
-- [ ] **DOC-01**: README and recipes document `wrapPage` for Cucumber, Mocha/Jest, and a plain script, with the honest limits and the never-false-green guarantee
+- [x] **DOC-01**: README and recipes document `wrapPage` for Cucumber, Mocha/Jest, and a plain script, with the honest limits and the never-false-green guarantee
 
 > **Cross-cutting hard rule (every WRAP/STORE requirement inherits this):** never-false-green holds in raw mode exactly as in fixture mode. A wrong or missing identity key must produce a missed heal, never a wrong heal or a false green.
 
@@ -137,7 +137,7 @@ Which phases cover which requirements. Populated during roadmap creation.
 | STORE-01 | Phase 6 | Complete |
 | STORE-02 | Phase 6 | Complete |
 | STORE-03 | Phase 6 | Complete |
-| DOC-01 | Phase 7 | Pending |
+| DOC-01 | Phase 7 | Complete |
 
 **Coverage:**
 - v1 requirements: 16 total, mapped 16, unmapped 0

@@ -130,7 +130,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. The docs state the never-false-green guarantee for raw mode and the honest limits (Page-level only this milestone; a wrong/missing key is a missed heal, never a wrong heal) so an adopter is not surprised
   3. Each recipe is runnable as written (the code blocks compile against the published API surface, validated by a docs/example smoke check)
 **Plans**: 2 plans
-- [ ] 07-01-PLAN.md, Compilable examples spine: 3 recipe example files (Cucumber/Mocha-Jest/plain-script) + type-only framework shims + tsconfig.examples.json + check:examples smoke-check wired into CI (criterion 3, DOC-01)
+- [x] 07-01-PLAN.md, Compilable examples spine: 3 recipe example files (Cucumber/Mocha-Jest/plain-script) + type-only framework shims + tsconfig.examples.json + check:examples smoke-check wired into CI (criterion 3, DOC-01)
 - [ ] 07-02-PLAN.md, README recipes + raw-mode never-false-green/honest-limits + CHANGELOG 0.2.0 + check:readme sync gate binding README blocks to the example files (criteria 1+2, DOC-01)
 
 ## Progress
@@ -146,4 +146,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 4. Offline Verification & Publish | 3/3 | Complete | 2026-05-31 |
 | 5. Runner-Agnostic Core | 2/2 | Complete   | 2026-06-02 |
 | 6. Standalone Persistence & Output | 2/2 | Complete   | 2026-06-02 |
-| 7. Recipes & Docs | 0/? | Not started | - |
+| 7. Recipes & Docs | 1/2 | In Progress|  |
