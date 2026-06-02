@@ -1,7 +1,15 @@
 {
   "name": "selfmend",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Self-healing Playwright locators that run fully offline inside your own CI: no API key, no telemetry, no false-green tests.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BilalEjaz/selfmend.git"
+  },
+  "homepage": "https://github.com/BilalEjaz/selfmend#readme",
+  "bugs": {
+    "url": "https://github.com/BilalEjaz/selfmend/issues"
+  },
   "keywords": [
     "playwright",
     "playwright-test",

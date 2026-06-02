@@ -5,10 +5,19 @@ All notable changes to **selfmend** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-> **Pre-1.0 notice:** While the version is below `1.0.0`, the public contract —
-> the configuration schema and the committed baseline store format — may change
+> **Pre-1.0 notice:** While the version is below `1.0.0`, the public contract
+> (the configuration schema and the committed baseline store format) may change
 > in a breaking way between minor releases (per SemVer, anything is allowed
 > pre-1.0). Such changes will always be called out in this changelog.
+
+## [0.1.2] - 2026-06-01
+
+### Changed
+
+- Added `repository`, `homepage`, and `bugs` fields to `package.json` so the npm
+  page links to the now-public GitHub repo (github.com/BilalEjaz/selfmend).
+- Stripped em dashes from the repo docs (`CHANGELOG.md`, `RELEASING.md`). No code
+  or runtime change; this release is metadata and docs only.
 
 ## [0.1.1] - 2026-06-01
 
@@ -46,7 +55,7 @@ inside your own CI, with a hard never-false-green guarantee.
   its action succeeds, `selfmend` records a derived-signal fingerprint (text,
   role, test-id, key attributes, neighbours, DOM position) for that locator.
 - **Persistent, reviewable baseline** (CAP-02). Fingerprints persist to a
-  committed `.selfmend/baseline.json` (derived signals only — no raw DOM, no
+  committed `.selfmend/baseline.json` (derived signals only, no raw DOM, no
   PII), written in a deterministic, byte-stable order so diffs stay reviewable
   with zero churn.
 - **Parallel-worker-safe persistence** (CAP-03). Each worker writes a lock-free
@@ -70,7 +79,7 @@ inside your own CI, with a hard never-false-green guarantee.
 - **Boxed end-of-run report** (REP-01, REP-02). A summary-only reporter
   (`selfmend/reporter`) prints every heal (test, original selector, healed
   target, confidence) and a separate could-not-heal section. The reporter never
-  heals — healing happens live in the worker fixture.
+  heals, healing happens live in the worker fixture.
 - **Fully-offline guarantee, verified** (PRIV-01). The entire capture + heal +
   merge path makes zero network calls, uses no API key, and emits no telemetry.
   Proven by an in-process network-block test that throws on any
@@ -85,7 +94,7 @@ inside your own CI, with a hard never-false-green guarantee.
 
 ### Known limitations
 
-- Locator healing only — assertions, smart waits, and any LLM-based tiebreaker
+- Locator healing only, assertions, smart waits, and any LLM-based tiebreaker
   are out of scope for v1.
 - Playwright-only (`@playwright/test >=1.42`, tested against 1.60).
 - The occurrence index counts chained-method invocations, so divergent control
