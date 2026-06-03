@@ -14,6 +14,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Nothing yet.
 
+## [0.2.2] - 2026-06-02
+
+### Fixed
+
+- **`wrapPage`: a locator action that triggers a client-side navigation no longer
+  hangs.** The success-path fingerprint capture used to run inline and unbounded,
+  so after a navigating action (for example a link or submit `click`) the capture
+  waited the full default timeout on the now-detached element before giving up,
+  which stalled the caller's `await`. Capture is now fire-and-forget and bounded:
+  a wrapped action resolves as soon as the real Playwright action resolves, and a
+  detached or navigating element is skipped fast (a missed fingerprint is
+  fail-safe, never a wrong heal). Baselines stay reliable because in-flight
+  captures are flushed before `saveBaseline`, before the per-worker shard write,
+  and before the heal path reads a fingerprint. Reported by an adopter using the
+  raw `wrapPage` adapter; the `@playwright/test` fixture path shared the same
+  latent issue. Covered by a new raw-mode navigating-action regression test.
+
 ## [0.2.1] - 2026-06-02
 
 Metadata and CI only. No code or API changes: 0.2.1 is identical to 0.2.0 at
@@ -181,6 +198,7 @@ inside your own CI, with a hard never-false-green guarantee.
 - `selectOption` / `setInputFiles` value-object payloads on the replay path are
   a known latent edge case (currently tolerated). See README "Limitations".
 
+[0.2.2]: https://github.com/BilalEjaz/selfmend/releases/tag/v0.2.2
 [0.2.1]: https://github.com/BilalEjaz/selfmend/releases/tag/v0.2.1
 [0.2.0]: https://github.com/BilalEjaz/selfmend/releases/tag/v0.2.0
 [0.1.1]: https://github.com/BilalEjaz/selfmend/releases/tag/v0.1.1
