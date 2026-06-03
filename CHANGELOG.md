@@ -14,6 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Nothing yet.
 
+## [0.2.3] - 2026-06-03
+
+### Fixed
+
+- In the end-of-run "could not heal" summary, a refusal with no scored candidate
+  showed its missing best-score as an em dash. It now shows "n/a", so the report
+  output contains no em dash. Output only, no behaviour change.
+
 ## [0.2.2] - 2026-06-02
 
 ### Fixed
@@ -198,6 +206,7 @@ inside your own CI, with a hard never-false-green guarantee.
 - `selectOption` / `setInputFiles` value-object payloads on the replay path are
   a known latent edge case (currently tolerated). See README "Limitations".
 
+[0.2.3]: https://github.com/BilalEjaz/selfmend/releases/tag/v0.2.3
 [0.2.2]: https://github.com/BilalEjaz/selfmend/releases/tag/v0.2.2
 [0.2.1]: https://github.com/BilalEjaz/selfmend/releases/tag/v0.2.1
 [0.2.0]: https://github.com/BilalEjaz/selfmend/releases/tag/v0.2.0

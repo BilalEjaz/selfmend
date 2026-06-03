@@ -1,6 +1,6 @@
 {
   "name": "selfmend",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Self-healing Playwright locators for any framework that drives a Playwright Page: Cucumber, Mocha, Jest, plain scripts, or @playwright/test. Fully offline, no API key, no telemetry, never a false-green test.",
   "repository": {
     "type": "git",
