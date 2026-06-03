@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ShopDemo checkout (current build)</title>
+  </head>
+  <body>
+    <main>
+      <h1>Checkout</h1>
+      <p>Order total: $42.00</p>
+
+      <!--
+        This is the button an automated test clicks to place an order.
+        In TODAY'S build, a test that targets the CSS class ".btn-primary"
+        finds it fine. selfmend quietly records what this button looks like
+        (its visible text, its data-testid, its role) the first time a passing
+        test resolves it.
+      -->
+      <button
+        type="button"
+        data-testid="place-order"
+        class="btn btn-primary"
+        role="button"
+        aria-label="Place your order"
+      >
+        Place order
+      </button>
+
+      <!--
+        A limited-time promo link. It exists in this build, but the campaign
+        is about to end, so it is REMOVED in the next build. There is no honest
+        replacement for it, so selfmend must refuse to heal a test that looks
+        for it later (no false green).
+      -->
+      <a data-testid="promo" class="promo-link" href="#">Limited time offer</a>
+    </main>
+  </body>
+</html>

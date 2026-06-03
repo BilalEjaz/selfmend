@@ -37,3 +37,6 @@ pnpm-debug.log*
 .idea/
 .vscode/
 *.swp
+
+# Demo scratch baseline (regenerated and removed each run)
+demo/baseline.demo.json

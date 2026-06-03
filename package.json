@@ -65,6 +65,7 @@
   "sideEffects": false,
   "scripts": {
     "build": "tsdown",
+    "demo": "npm run build && node demo/run-demo.mjs",
     "test": "vitest run src",
     "test:watch": "vitest src",
     "test:e2e": "playwright test",

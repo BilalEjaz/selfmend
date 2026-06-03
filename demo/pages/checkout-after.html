@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ShopDemo checkout (redesigned build)</title>
+  </head>
+  <body>
+    <main>
+      <h1>Checkout</h1>
+      <p>Order total: $42.00</p>
+
+      <!--
+        SAME button as before. The front-end team redesigned the page and
+        RENAMED the CSS class from "btn-primary" to "cta". Everything that
+        actually identifies the button (its visible text "Place order", its
+        data-testid, its role, its aria-label) is UNCHANGED. The button still
+        works perfectly for a human. But an automated test pinned to the old
+        ".btn-primary" class can no longer find it, and would fail, even though
+        nothing is actually broken. This is the single most common cause of
+        flaky, high-maintenance test suites: a selector changed, not the app.
+      -->
+      <button
+        type="button"
+        data-testid="place-order"
+        class="btn cta"
+        role="button"
+        aria-label="Place your order"
+      >
+        Place order
+      </button>
+
+      <!--
+        The promo campaign ended: this link was genuinely REMOVED from the page.
+        A test that still looks for it SHOULD fail. selfmend must not invent a
+        replacement, that would be a false green, the one thing it promises
+        never to do.
+      -->
+    </main>
+  </body>
+</html>
