@@ -61,6 +61,7 @@ function baseCtx(over: Partial<HealContext>): HealContext {
     suite: "spec.ts",
     test: "case",
     replayTimeoutMs: 1000,
+    captureTimeoutMs: 2000,
     nextOccurrence: (() => {
       let n = 0;
       return () => n++;

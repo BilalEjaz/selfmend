@@ -8,7 +8,7 @@ import {
   writeShard,
   shardPath,
 } from "../store/persistence.js";
-import { describeArgs } from "./locator-proxy.js";
+import { describeArgs, CAPTURE_TIMEOUT_MS } from "./locator-proxy.js";
 import {
   attachHealEvent,
   attachRefusedEvent,
@@ -108,6 +108,9 @@ export const healingFixture = base.extend<
       const rootDir = workerInfo.config.rootDir;
       const store = await loadCommittedBaseline(rootDir);
       await use(store);
+      // Flush in-flight fire-and-forget captures (CAP-01) before snapshotting,
+      // so the shard reflects every fingerprint captured this run.
+      await store.settle();
       // Worker teardown: lock-free per-worker shard flush.
       await writeShard(
         shardPath(rootDir, workerInfo.parallelIndex),

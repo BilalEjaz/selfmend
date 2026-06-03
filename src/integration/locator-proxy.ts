@@ -130,6 +130,16 @@ export interface HealContext {
    */
   replayTimeoutMs: number;
   /**
+   * Bounded budget (ms) for the best-effort success-path fingerprint capture so
+   * a navigating / detached element cannot stall the action. Capture is
+   * fire-and-forget: it NEVER extends the action's promise. This budget caps the
+   * in-browser `evaluate` round-trip the capture performs, so after a navigating
+   * action the capture fails fast (no fingerprint this run) instead of
+   * auto-waiting the full default timeout on the now-detached element. Both ctx
+   * builders supply {@link CAPTURE_TIMEOUT_MS}.
+   */
+  captureTimeoutMs: number;
+  /**
    * Per-TEST, per-CONTENT occurrence source (D-04/D-05). Called once per
    * `wrapLocator` with the content identity (`testFile :: testTitle ::
    * selector`); returns the 0-based Nth CREATION of that content within the
@@ -142,6 +152,16 @@ export interface HealContext {
    */
   nextOccurrence: (contentKey: string) => number;
 }
+
+/**
+ * Default bounded budget (ms) for the best-effort success-path fingerprint
+ * capture (CAP-01). A sensible cap: long enough for a healthy in-browser
+ * `evaluate` round-trip on a still-attached element, short enough that a
+ * navigating / detached element fails the capture fast instead of stalling. Both
+ * ctx builders (the `@playwright/test` fixture and the raw `wrapPage`) wire this
+ * into `HealContext.captureTimeoutMs`.
+ */
+export const CAPTURE_TIMEOUT_MS = 2000;
 
 /**
  * Build a fresh per-test, per-content occurrence counter (D-04/D-05). Each call
@@ -318,21 +338,49 @@ export function describeArgs(
  * run the pure heal decision and (only above the floor) rebind + replay.
  */
 /**
- * Best-effort capture-on-success for the given key (deduped per run). Never
- * fails a passing action because the fingerprint round-trip hiccuped.
+ * Best-effort capture-on-success for the given key (deduped per run).
+ *
+ * BOUNDED + TRACKED (CAP-01): kicks off a `captureFingerprint` capped by
+ * `ctx.captureTimeoutMs` so a detached / navigating element can never make the
+ * `evaluate` round-trip auto-wait the full default timeout. The capture swallows
+ * its own errors (best-effort: a miss means no fingerprint this run, never a
+ * failed action), so the returned promise NEVER rejects. The promise is
+ * registered via `ctx.store.track` so the heal path and the persist / teardown
+ * flush can `await store.settle()` and guarantee an in-flight capture has landed
+ * before they read or persist it.
+ *
+ * The promise is RETURNED so the two call sites can pick their semantics:
+ *
+ *  - The ACTION path ({@link actionOrHeal}) does NOT await it (fire-and-forget),
+ *    so a navigating click resolves immediately instead of stalling on the
+ *    now-detached element (the adopter-reported hang). A same-run reuse still
+ *    finds the fingerprint because the heal path awaits `store.settle()` first.
+ *  - The CAPTURE_ONLY path ({@link captureOnly}, e.g. `waitFor`) DOES await it.
+ *    `waitFor` never itself navigates, and callers rely on the capture being
+ *    landed by the time `waitFor` resolves (e.g. capture-then-saveBaseline), so
+ *    the bounded await is both safe and required there.
  */
-async function captureOnSuccess(
+function captureOnSuccess(
   real: Locator,
   key: string,
   ctx: HealContext,
 ): Promise<void> {
-  if (!ctx.config.enabled || ctx.store.has(key)) return;
-  try {
-    const fp = await captureFingerprint(real, ctx.config.testIdAttr);
-    ctx.store.set(key, fp);
-  } catch {
-    // Capture is best-effort.
-  }
+  if (!ctx.config.enabled || ctx.store.has(key)) return Promise.resolve();
+  const p = (async (): Promise<void> => {
+    try {
+      const fp = await captureFingerprint(
+        real,
+        ctx.config.testIdAttr,
+        ctx.captureTimeoutMs,
+      );
+      ctx.store.set(key, fp);
+    } catch {
+      // Capture is best-effort: a detached / navigating element or a bounded
+      // timeout simply means no fingerprint this run, never a failed action.
+    }
+  })();
+  ctx.store.track(p);
+  return p;
 }
 
 /**
@@ -352,6 +400,10 @@ async function captureOnly(
     ...a: unknown[]
   ) => Promise<unknown>;
   const result = await invoke.apply(real, args);
+  // `waitFor` never navigates and callers rely on the capture being landed by
+  // the time it resolves (capture-then-saveBaseline). Await the BOUNDED capture
+  // so a same-run save / size check sees the fingerprint; the cap keeps even a
+  // surprise detach from stalling.
   await captureOnSuccess(real, key, ctx);
   return result;
 }
@@ -371,13 +423,19 @@ async function actionOrHeal(
   try {
     // Real attempt: keep the user's configured timeout (auto-wait semantics).
     const result = await invoke.apply(real, args);
-    // Green path: capture once per key per run (dedup-guarded).
-    await captureOnSuccess(real, key, ctx);
+    // Green path: capture once per key per run (dedup-guarded). FIRE-AND-FORGET
+    // and bounded, never awaited, so a navigating action resolves immediately
+    // instead of stalling on a detached-element capture (the adopter bug).
+    captureOnSuccess(real, key, ctx);
     return result;
   } catch (err) {
     if (!isTimeoutError(err)) throw err; // not a resolution failure -> propagate
     if (!ctx.config.enabled) throw err; // healing disabled (CFG-01) -> fail normally
 
+    // Ensure any in-flight fire-and-forget capture from THIS run has landed
+    // before reading the fingerprint, so a same-run capture-then-heal still
+    // finds its baseline (the heal path is the one place that must wait).
+    await ctx.store.settle();
     const fingerprint = ctx.store.get(key);
     if (!fingerprint) throw err; // never heal an unseen locator (no false green)
 

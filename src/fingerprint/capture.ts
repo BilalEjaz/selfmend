@@ -40,13 +40,22 @@ const STABLE_ATTRS = new Set([
  * to. Assumes the locator has already resolved (call after a successful action
  * or `waitFor`).
  *
+ * Capture is BOUNDED and BEST-EFFORT. When `timeoutMs` is provided it is passed
+ * through to `locator.evaluate` as its `timeout` option, so a navigating /
+ * detached element cannot make the `evaluate` round-trip auto-wait the full
+ * default timeout (the adopter-reported navigating-action hang). The caller runs
+ * capture fire-and-forget and swallows a timeout, so a bounded capture that does
+ * not land simply means no fingerprint this run, never a stalled action.
+ *
  * @param locator A resolved Playwright Locator.
  * @param testIdAttr The configured test-id attribute name (e.g. `data-testid`).
+ * @param timeoutMs Optional bounded budget (ms) for the evaluate round-trip.
  * @returns A {@link Fingerprint} of derived signals only.
  */
 export async function captureFingerprint(
   locator: Locator,
   testIdAttr: string,
+  timeoutMs?: number,
 ): Promise<Fingerprint> {
   const raw = await locator.evaluate(
     (el: Element, args: { testIdAttr: string; stableAttrs: string[] }) => {
@@ -82,6 +91,7 @@ export async function captureFingerprint(
       };
     },
     { testIdAttr, stableAttrs: Array.from(STABLE_ATTRS) },
+    timeoutMs === undefined ? undefined : { timeout: timeoutMs },
   );
 
   return raw satisfies Fingerprint;

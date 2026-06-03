@@ -121,6 +121,7 @@ function ctxFor(
     suite: "spec.ts",
     test: "a raw-mode case",
     replayTimeoutMs: 1000,
+    captureTimeoutMs: 2000,
     nextOccurrence: (() => {
       let n = 0;
       return () => n++;

@@ -57,6 +57,7 @@ function ctxWith(
     suite: "spec.ts",
     test,
     replayTimeoutMs: 5000,
+    captureTimeoutMs: 2000,
     nextOccurrence,
   };
 }

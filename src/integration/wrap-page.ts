@@ -4,6 +4,7 @@ import { configSchema, type SelfmendConfig } from "../config/schema.js";
 import type { BaselineStore } from "../store/store.js";
 import {
   wrapLocator,
+  CAPTURE_TIMEOUT_MS,
   type HealContext,
 } from "./locator-proxy.js";
 import { createOccurrenceCounter } from "./locator-proxy.js";
@@ -253,6 +254,10 @@ export function wrapPage(page: Page, opts: WrapPageOptions): Page {
             suite: resolved.suite,
             test: resolved.test,
             replayTimeoutMs,
+            // Bounded best-effort capture budget (CAP-01): a navigating /
+            // detached element fails capture fast instead of stalling the
+            // action. Shared single constant across both adapters.
+            captureTimeoutMs: CAPTURE_TIMEOUT_MS,
             nextOccurrence: resolved.nextOccurrence,
           };
           return wrapLocator(real, selector, ctx);
