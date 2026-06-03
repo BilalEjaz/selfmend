@@ -16,6 +16,12 @@ Nothing yet.
 
 ## [0.2.3] - 2026-06-03
 
+### Added
+
+- A simple landing page (docs/index.html, served via GitHub Pages) that explains
+  what selfmend does, how to add it, and what to expect. The npm package homepage
+  now points to it instead of the GitHub readme.
+
 ### Fixed
 
 - In the end-of-run "could not heal" summary, a refusal with no scored candidate

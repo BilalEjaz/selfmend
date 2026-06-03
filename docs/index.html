@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>selfmend, self-healing Playwright locators</title>
+    <meta
+      name="description"
+      content="Self-healing locators for Playwright. When a selector changes but the element is still there, selfmend keeps your test green, and it never fakes a pass. Fully offline, MIT licensed."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2316a34a'/%3E%3Cpath d='M11 16h10M16 11v10' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --green: #16a34a;
+        --green-soft: #dcfce7;
+        --ink: #0f172a;
+        --muted: #5b6577;
+        --line: #e6e9ef;
+        --bg: #ffffff;
+        --bg-soft: #f7f8fa;
+        --term: #0b1020;
+        --radius: 14px;
+        --maxw: 860px;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+        color: var(--ink);
+        background: var(--bg);
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+      .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 22px; }
+      a { color: var(--green); }
+      code, pre, .mono {
+        font-family: "SF Mono", "JetBrains Mono", Menlo, Consolas,
+          "Liberation Mono", monospace;
+      }
+      h1, h2, h3 { line-height: 1.25; letter-spacing: -0.01em; }
+
+      /* Header */
+      header {
+        border-bottom: 1px solid var(--line);
+        position: sticky;
+        top: 0;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: saturate(180%) blur(8px);
+        z-index: 5;
+      }
+      .nav {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        height: 60px;
+      }
+      .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+      .brand .mark {
+        width: 26px; height: 26px; border-radius: 7px; background: var(--green);
+        display: grid; place-items: center; color: #fff; flex: none;
+      }
+      .nav .spacer { flex: 1; }
+      .nav a { color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 600; }
+      .nav a:hover { color: var(--ink); }
+
+      /* Hero */
+      .hero { padding: 72px 0 56px; }
+      .pill {
+        display: inline-block; font-size: 13px; font-weight: 600;
+        color: var(--green); background: var(--green-soft);
+        padding: 5px 12px; border-radius: 999px; margin-bottom: 20px;
+      }
+      .hero h1 { font-size: 46px; margin: 0 0 16px; }
+      .hero p.lead { font-size: 20px; color: var(--muted); margin: 0 0 28px; max-width: 640px; }
+      .cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+      .install {
+        display: inline-flex; align-items: center; gap: 10px;
+        background: var(--term); color: #e6edf3; padding: 12px 16px;
+        border-radius: 10px; font-size: 15px;
+      }
+      .install .dollar { color: #7d8aa5; }
+      .btn {
+        display: inline-block; padding: 11px 18px; border-radius: 10px;
+        font-weight: 650; text-decoration: none; font-size: 15px;
+      }
+      .btn.primary { background: var(--green); color: #fff; }
+      .btn.ghost { border: 1px solid var(--line); color: var(--ink); }
+
+      /* Sections */
+      section { padding: 46px 0; border-top: 1px solid var(--line); }
+      section h2 { font-size: 28px; margin: 0 0 10px; }
+      section .sub { color: var(--muted); margin: 0 0 28px; max-width: 640px; }
+
+      .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+      .card {
+        border: 1px solid var(--line); border-radius: var(--radius);
+        padding: 20px; background: var(--bg-soft);
+      }
+      .card h3 { margin: 0 0 6px; font-size: 17px; }
+      .card p.k { color: var(--muted); font-size: 14px; margin: 0 0 14px; }
+      pre {
+        margin: 0; background: var(--term); color: #e6edf3;
+        padding: 16px; border-radius: 10px; overflow-x: auto; font-size: 13.5px;
+        line-height: 1.7;
+      }
+      pre .add { color: #7ee787; }
+      pre .del { color: #ff9492; }
+      pre .dim { color: #8b98b0; }
+      pre .key { color: #79c0ff; }
+
+      /* Steps */
+      .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+      .step { border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
+      .step .n {
+        width: 30px; height: 30px; border-radius: 8px; background: var(--green-soft);
+        color: var(--green); font-weight: 700; display: grid; place-items: center;
+        margin-bottom: 12px;
+      }
+      .step h3 { margin: 0 0 6px; font-size: 16px; }
+      .step p { margin: 0; color: var(--muted); font-size: 14.5px; }
+
+      /* Terminal mock */
+      .term {
+        margin-top: 26px; background: var(--term); border-radius: 12px;
+        overflow: hidden; box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+      }
+      .term .bar {
+        display: flex; align-items: center; gap: 7px; padding: 11px 14px;
+        background: #141a2e; border-bottom: 1px solid #232a42;
+      }
+      .term .bar i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+      .term .bar .t { color: #8b98b0; font-size: 12.5px; margin-left: 8px; }
+      .term pre { background: transparent; border-radius: 0; padding: 18px; font-size: 13px; }
+      .term .box { color: #5b6577; }
+      .h-green { color: #7ee787; }
+      .h-cyan { color: #7bd9ff; }
+      .h-red { color: #ff9492; }
+      .h-yellow { color: #f2cc60; }
+      .h-dim { color: #6b7689; }
+
+      /* Promise */
+      .promise {
+        background: var(--green); color: #fff; border-radius: var(--radius);
+        padding: 30px; margin-top: 8px;
+      }
+      .promise h2 { color: #fff; margin: 0 0 8px; }
+      .promise p { margin: 0; color: #eafff0; font-size: 16px; max-width: 680px; }
+
+      .facts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+      .fact {
+        font-size: 13.5px; font-weight: 600; color: var(--ink);
+        border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px;
+      }
+      .fact b { color: var(--green); }
+
+      ul.limits { margin: 0; padding-left: 18px; color: var(--muted); }
+      ul.limits li { margin: 6px 0; }
+
+      footer { border-top: 1px solid var(--line); padding: 30px 0 50px; color: var(--muted); font-size: 14px; }
+      footer a { text-decoration: none; font-weight: 600; }
+      footer .row { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; }
+      footer .spacer { flex: 1; }
+
+      @media (max-width: 720px) {
+        .hero h1 { font-size: 34px; }
+        .grid2, .steps { grid-template-columns: 1fr; }
+        .nav a.hideable { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="wrap nav">
+        <span class="brand">
+          <span class="mark" aria-hidden="true">
+            <svg width="15" height="15" viewBox="0 0 32 32" fill="none">
+              <path d="M11 16h10M16 11v10" stroke="#fff" stroke-width="3.4" stroke-linecap="round" />
+            </svg>
+          </span>
+          selfmend
+        </span>
+        <span class="spacer"></span>
+        <a class="hideable" href="#add">Add it</a>
+        <a class="hideable" href="#expect">What to expect</a>
+        <a href="https://www.npmjs.com/package/selfmend">npm</a>
+        <a href="https://github.com/BilalEjaz/selfmend">GitHub</a>
+      </div>
+    </header>
+
+    <main>
+      <!-- HERO -->
+      <div class="wrap hero">
+        <span class="pill">Playwright, fully offline, MIT</span>
+        <h1>Tests that heal themselves.</h1>
+        <p class="lead">
+          When a selector changes but the element is still there, selfmend
+          reconnects your test and keeps it green. And it never fakes a pass.
+        </p>
+        <div class="cta">
+          <span class="install"><span class="dollar">$</span> npm i -D selfmend</span>
+          <a class="btn primary" href="#add">How to add it</a>
+          <a class="btn ghost" href="https://github.com/BilalEjaz/selfmend">View source</a>
+        </div>
+      </div>
+
+      <!-- PROBLEM -->
+      <section>
+        <div class="wrap">
+          <h2>Why tests break for no real reason</h2>
+          <p class="sub">
+            Most failing end-to-end tests are not real bugs. A developer renames
+            a CSS class or moves a button, and every test pinned to the old
+            selector goes red, even though the app works perfectly. Teams burn
+            hours fixing tests that never caught a real failure, and slowly stop
+            trusting the suite. selfmend absorbs that churn so the suite stays
+            useful.
+          </p>
+        </div>
+      </section>
+
+      <!-- ADD IT -->
+      <section id="add">
+        <div class="wrap">
+          <h2>Add it in one step</h2>
+          <p class="sub">
+            No test rewrites. Pick the path that matches how you run Playwright.
+          </p>
+          <div class="grid2">
+            <div class="card">
+              <h3>Using @playwright/test</h3>
+              <p class="k">Change one import. Your existing tests do not change.</p>
+<pre><span class="del">- import { test, expect } from "@playwright/test";</span>
+<span class="add">+ import { test, expect } from "selfmend";</span></pre>
+            </div>
+            <div class="card">
+              <h3>Any other framework</h3>
+              <p class="k">Cucumber, Mocha, Jest, or a plain script. Wrap the page once.</p>
+<pre><span class="key">import</span> { wrapPage } <span class="key">from</span> <span class="add">"selfmend"</span>;
+
+<span class="dim">// once, where you create the page</span>
+this.page = <span class="key">wrapPage</span>(rawPage, {
+  store,
+  scope: () => ({ suite: feature, test: scenario }),
+});</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- WHAT TO EXPECT -->
+      <section id="expect">
+        <div class="wrap">
+          <h2>What to expect</h2>
+          <p class="sub">
+            selfmend does three things, in order. Nothing talks to a network at
+            any point.
+          </p>
+          <div class="steps">
+            <div class="step">
+              <div class="n">1</div>
+              <h3>It learns on green</h3>
+              <p>
+                When a test passes, selfmend records a fingerprint of each
+                element it touched: visible text, role, test id, position. It
+                saves them to a plain local JSON file.
+              </p>
+            </div>
+            <div class="step">
+              <div class="n">2</div>
+              <h3>It heals on break</h3>
+              <p>
+                Later a selector breaks. After Playwright's normal timeout,
+                selfmend scores the page. Only if one element clearly matches
+                above a confidence floor does it reconnect your locator and
+                replay the action. The test stays green.
+              </p>
+            </div>
+            <div class="step">
+              <div class="n">3</div>
+              <h3>It reports, honestly</h3>
+              <p>
+                Every run prints what healed and what did not. If nothing
+                matches confidently, selfmend does nothing and the test fails
+                normally, exactly as it would today.
+              </p>
+            </div>
+          </div>
+
+          <!-- Terminal mock of the real report -->
+          <div class="term" aria-label="Example end-of-run report">
+            <div class="bar">
+              <i style="background:#ff5f56"></i><i style="background:#ffbd2e"></i><i style="background:#27c93f"></i>
+              <span class="t">selfmend report, end of run</span>
+            </div>
+<pre><span class="box">┌───────────────────────────────────────────────────────────────────┐</span>
+<span class="box">│</span> <span class="h-cyan">selfmend: 1 locator healed</span>                                        <span class="box">│</span>
+<span class="box">│</span> checkout                                                          <span class="box">│</span>
+<span class="box">│</span>   <span class="h-red">page.locator(.btn-primary)</span> <span class="h-dim">-&gt;</span> <span class="h-green">[data-testid="place-order"]</span>  <span class="h-dim">(</span><span class="h-yellow">0.97</span><span class="h-dim">)</span> <span class="box">│</span>
+<span class="box">└───────────────────────────────────────────────────────────────────┘</span>
+<span class="box">┌─────────────────────────────────────────────────────────┐</span>
+<span class="box">│</span> <span class="h-yellow">selfmend: 1 locator could NOT heal</span>                       <span class="box">│</span>
+<span class="box">│</span> checkout                                                  <span class="box">│</span>
+<span class="box">│</span>   <span class="h-red">page.locator(.promo-link)</span> <span class="h-red">x</span> <span class="h-yellow">no-candidates</span>  <span class="h-dim">(best n/a)</span>  <span class="box">│</span>
+<span class="box">└─────────────────────────────────────────────────────────┘</span></pre>
+          </div>
+          <p class="sub" style="margin-top:18px">
+            The first box: a renamed button was reconnected with 0.97 confidence,
+            green. The second: an element that was genuinely removed, which
+            selfmend refused to fake. That refusal is the point.
+          </p>
+        </div>
+      </section>
+
+      <!-- PROMISE -->
+      <section>
+        <div class="wrap">
+          <div class="promise">
+            <h2>The one promise: it never fakes a green</h2>
+            <p>
+              selfmend only heals when it is highly confident the element is the
+              same one, and clearly not a look-alike. Otherwise the test fails
+              exactly as it would today. The worst case is a missed heal you
+              handle by hand, never a real bug hidden behind a false pass.
+            </p>
+          </div>
+          <div class="facts">
+            <span class="fact"><b>Offline.</b> No network calls</span>
+            <span class="fact"><b>Private.</b> No telemetry, no API key</span>
+            <span class="fact"><b>Yours.</b> The baseline is a local file you own</span>
+            <span class="fact"><b>Free.</b> MIT licensed</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- LIMITS -->
+      <section>
+        <div class="wrap">
+          <h2>What it does not do</h2>
+          <p class="sub">So expectations stay honest.</p>
+          <ul class="limits">
+            <li>It does not write your tests. You still decide what to check.</li>
+            <li>It does not fix real bugs. If the product is broken, the test fails.</li>
+            <li>It does not silently rewrite your code. It reconnects at run time and reports it.</li>
+            <li>
+              It is a safety net for selector churn, not a reason to skip stable
+              selectors. Treat a heal as a heads-up to update a selector later.
+            </li>
+          </ul>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap row">
+        <span class="brand">
+          <span class="mark" aria-hidden="true">
+            <svg width="15" height="15" viewBox="0 0 32 32" fill="none">
+              <path d="M11 16h10M16 11v10" stroke="#fff" stroke-width="3.4" stroke-linecap="round" />
+            </svg>
+          </span>
+          selfmend
+        </span>
+        <span class="spacer"></span>
+        <a href="https://www.npmjs.com/package/selfmend">npm</a>
+        <a href="https://github.com/BilalEjaz/selfmend">GitHub</a>
+        <a href="https://github.com/BilalEjaz/selfmend/blob/main/LICENSE">MIT licence</a>
+      </div>
+      <div class="wrap" style="margin-top:14px">
+        Install with <code>npm i -D selfmend</code>. Built for Playwright.
+      </div>
+    </footer>
+  </body>
+</html>
