@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>selfmend fixture — nav start</title>
+  </head>
+  <body>
+    <main>
+      <h1>selfmend nav-start fixture</h1>
+
+      <!--
+        A link with a STABLE selector that navigates to the existing index.html
+        in this same fixture-app directory. Clicking it triggers a client-side
+        navigation: the element the click resolved against is detached as the
+        new document loads. This is the exact shape that used to hang the raw
+        wrapPage adapter, because the success-path fingerprint capture awaited
+        an unbounded locator.evaluate against the now-detached element.
+      -->
+      <p>
+        <a data-testid="nav-link" href="./index.html">Go</a>
+      </p>
+    </main>
+  </body>
+</html>
