@@ -203,11 +203,11 @@ describe("SelfmendReporter could-not-heal section (REP-02, D-04)", () => {
     expect(out).toContain("below-floor");
     expect(out).toContain("0.42");
 
-    // A null bestScore renders as a dash, never "null".
+    // A null bestScore renders as n/a, never "null".
     expect(out).toContain(".vanished");
     expect(out).toContain("no-candidates");
     expect(out).not.toContain("null");
-    expect(out).toMatch(/—|-/);
+    expect(out).toMatch(/n.a/);
   });
 
   it("treats a missing-`kind` attachment as a healed event (back-compat, Pitfall 4)", () => {

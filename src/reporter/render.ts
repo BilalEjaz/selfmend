@@ -20,7 +20,7 @@ import type {
  * Pure and offline: it depends only on `picocolors` for color and the
  * {@link SelfmendEvent} shape. No `fs`, no Playwright import, no new dependency.
  *
- * It carries derived audit fields only (selectors, score, reason) — never raw
+ * It carries derived audit fields only (selectors, score, reason), never raw
  * DOM content (T-06-08), unchanged from the reporter.
  */
 
@@ -32,7 +32,7 @@ import type {
  * healed box FIRST, then the could-not-heal section, each in input order. With
  * zero healed events the healed box is the single quiet dim line (no box drawn);
  * with zero refusals no could-not-heal section is appended (mirrors the N=0
- * guard). A `null` bestScore renders as a dash, never the literal "null".
+ * guard). A `null` bestScore renders as "n/a", never the literal "null".
  *
  * @param events The collected heal events (healed + refused), in render order.
  * @returns The exact string the reporter would print for the same events.
@@ -130,14 +130,14 @@ function renderRow(h: HealEvent): string[] {
 /**
  * Render one refusal as a (possibly multi-line) indented block:
  *   <test name>
- *     <original>  x  <reason>  (best <score|—>)
- * A `null` bestScore renders as a dash, never the literal "null".
+ *     <original>  x  <reason>  (best <score|n/a>)
+ * A `null` bestScore renders as "n/a", never the literal "null".
  */
 function renderRefusedRow(r: RefusedEvent): string[] {
   const mark = pc.red("x");
   const orig = pc.red(r.originalSelector);
   const reason = pc.yellow(r.reason);
-  const best = r.bestScore === null ? "—" : formatScore(r.bestScore);
+  const best = r.bestScore === null ? "n/a" : formatScore(r.bestScore);
   const score = pc.dim("best ") + pc.yellow(best);
   return [
     `${pc.bold(r.testName)}`,

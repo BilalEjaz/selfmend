@@ -126,12 +126,12 @@ describe("renderHealSummary is byte-identical to the reporter (OUT-02)", () => {
     expect(renderHealSummary(events)).toBe(reporterRender(events));
   });
 
-  it("renders a null bestScore as a dash (never the literal 'null'), matching the reporter", () => {
+  it("renders a null bestScore as n/a (never the literal 'null'), matching the reporter", () => {
     const events: SelfmendEvent[] = [REFUSED_NO_CANDIDATES];
     const out = renderHealSummary(events);
     expect(out).toBe(reporterRender(events));
     expect(out).not.toContain("null");
-    expect(out).toMatch(/—/);
+    expect(out).toMatch(/n.a/);
   });
 
   it("treats a missing-kind event as healed (events.ts:34), byte-identical to the reporter", () => {
