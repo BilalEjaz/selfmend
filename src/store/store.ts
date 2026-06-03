@@ -34,6 +34,17 @@ export class BaselineStore {
   private readonly seen = new Set<string>();
 
   /**
+   * In-flight fire-and-forget capture promises (CAP-01). The success-path
+   * fingerprint capture no longer extends the action's promise (a navigating /
+   * detached element must not stall the action), so it runs as a tracked
+   * fire-and-forget task. Sites that must observe a captured fingerprint before
+   * reading or persisting the store (the heal path, the persist + teardown
+   * flush) await {@link BaselineStore.settle} first. The capture itself swallows
+   * its own errors, so these promises never reject.
+   */
+  private readonly pending = new Set<Promise<void>>();
+
+  /**
    * Seed a store from a loaded {@link BaselineFile} (Plan 03-02). The committed
    * file's keys ARE identity keys, so they are inserted verbatim; the loaded
    * baseline is NOT marked seen (seen tracks what THIS run created/resolved, so
@@ -98,6 +109,32 @@ export class BaselineStore {
   set(key: string, fingerprint: Fingerprint): void {
     this.fingerprints.set(key, fingerprint);
     this.seen.add(key);
+  }
+
+  /**
+   * Register a fire-and-forget capture promise so a later {@link settle} can
+   * wait for it to LAND (CAP-01). The promise is removed from the pending set
+   * once it settles. The capture swallows its own errors, so `p` never rejects;
+   * `.finally` is used purely for cleanup regardless of outcome.
+   */
+  track(p: Promise<void>): void {
+    this.pending.add(p);
+    p.finally(() => {
+      this.pending.delete(p);
+    });
+  }
+
+  /**
+   * Resolve only once every tracked fire-and-forget capture has settled. The
+   * loop re-checks after each batch so a capture queued WHILE settling (rare) is
+   * also awaited; in practice it completes in a single pass. Awaited by the heal
+   * path before reading a fingerprint and by the persist + teardown flush before
+   * serializing, so fire-and-forget capture never loses a same-run baseline.
+   */
+  async settle(): Promise<void> {
+    while (this.pending.size > 0) {
+      await Promise.allSettled([...this.pending]);
+    }
   }
 
   /** Number of distinct baselines recorded this run. */

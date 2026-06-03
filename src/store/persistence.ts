@@ -150,6 +150,9 @@ export async function saveBaseline(
   target: string,
   store: BaselineStore,
 ): Promise<void> {
+  // Flush any in-flight fire-and-forget captures (CAP-01) before serializing, so
+  // the persisted file reflects every fingerprint captured this run.
+  await store.settle();
   const existing = (await readBaselineFile(target)).toBaselineFile();
   const next = refresh(existing, {
     captures: store.toBaselineFile().entries,
